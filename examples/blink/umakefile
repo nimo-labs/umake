@@ -1,0 +1,24 @@
+{
+	"target": "blink",
+    "microcontroller": "atsamd21j18a",
+    "toolchain": "arm-none-eabi",
+    "c_sources": [
+        "main.c"
+    ],
+    "includes": [
+        "./"
+    ],
+    "buildDir": "./build",
+    "libraries": [
+     	{
+           	"libName": "nimolib",
+           	"libPath": "git@github.com:nimo-labs/nimolib.git",
+    		"books":[
+        		"gpio",
+        		"delay",
+				"printf",
+				"osc"
+        	]
+	    }
+	]
+}
