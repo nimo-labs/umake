@@ -17,4 +17,4 @@
 
 cmake_minimum_required(VERSION 2.8.9)
 project (umake)
-add_executable(umake umake.cpp boilerplate.cpp parseMicrocontroller.cpp)
+add_executable(umake umake.cpp boilerplate.cpp parseMicrocontroller.cpp processTargets.cpp)

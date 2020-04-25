@@ -1,4 +1,4 @@
-# Install script for directory: /home/nick/Onedrive/Code/umake
+# Install script for directory: /home/nick/codeShare/Projects/umake
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/nick/Onedrive/Code/umake/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/nick/codeShare/Projects/umake/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

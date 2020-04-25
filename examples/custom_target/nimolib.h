@@ -14,12 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#define UP_CLK 8000000
 
-#define CHECKOUT_TYPE_FAST 0
-#define CHECKOUT_TYPE_SELECTIVE 1
-
-/*Allow for overriding in-built targets*/
-extern bool hasCustomTargetAll;
-extern bool hasCustomTargetProgram;
-extern bool hasCustomTargetReset;
-extern bool hasCustomTargetChipErase;
+#define PERHIP_CLK_GEN 0
+#define PRINTF_BUFF_SIZE 0 /*Setting the buffer size to 0 effectively disables printf, 
+							without breaking calling functions*/

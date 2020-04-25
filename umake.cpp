@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "rapidjson/document.h"		// rapidjson's DOM-style API
+#include "rapidjson/document.h"     // rapidjson's DOM-style API
 #include "rapidjson/prettywriter.h" // for stringify JSON
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/error/en.h"
@@ -24,11 +24,12 @@
 #include <fstream>
 #include <iostream>
 #include <sys/stat.h> /*mkdir */
-#include <unistd.h>	  /*chdir */
+#include <unistd.h>   /*chdir */
 
 #include "umake.h"
 #include "boilerplate.h"
 #include "parseMicrocontroller.h"
+#include "processTargets.h"
 
 #define JSON_INT 0
 #define JSON_STRING 1
@@ -39,15 +40,21 @@ std::ofstream makefile;
 using namespace rapidjson;
 using namespace std;
 
-unsigned char customLinker = 0; /*If 1, umakefile has defined a custom linker*/
+unsigned char customLinker = 0;                       /*If 1, umakefile has defined a custom linker*/
 unsigned char selectiveCheckout = CHECKOUT_TYPE_FAST; /*Default to fast checkout as selective is VEEERRRRRYYYYY slow!*/
 
-#define PWD(a)                               \
-	cout << a << " pwd: "; \
-	fflush(stdout);                          \
-	system("pwd");                           \
-	cout << endl                             \
-		 << endl
+/*Allow for overriding in-built targets*/
+bool hasCustomTargetAll = 0;
+bool hasCustomTargetProgram = 0;
+bool hasCustomTargetReset = 0;
+bool hasCustomTargetChipErase = 0;
+
+#define PWD(a)             \
+    cout << a << " pwd: "; \
+    fflush(stdout);        \
+    system("pwd");         \
+    cout << endl           \
+         << endl
 
 void processBook(string libName, string bookName)
 {
@@ -62,7 +69,7 @@ void processBook(string libName, string bookName)
 
     /*Get book definition*/
 
-    if(CHECKOUT_TYPE_SELECTIVE == selectiveCheckout)
+    if (CHECKOUT_TYPE_SELECTIVE == selectiveCheckout)
     {
         /**** Selective checkout ****/
         chdir(libName.c_str());
@@ -74,11 +81,12 @@ void processBook(string libName, string bookName)
 
         int sysRet = system(clone.c_str());
         if (0 != sysRet) /*If we have already cloned the repo... */
-            cout << "Warning: Uanable to check out book: " << bookName<<endl<<endl;
+            cout << "Warning: Uanable to check out book: " << bookName << endl
+                 << endl;
 
         chdir("../");
 
-        if(0 == bookName.compare("uC"))
+        if (0 == bookName.compare("uC"))
             return;
         /********************/
     }
@@ -229,7 +237,7 @@ void processLibs(void)
 
             string clone;
 
-            if(CHECKOUT_TYPE_SELECTIVE == selectiveCheckout)
+            if (CHECKOUT_TYPE_SELECTIVE == selectiveCheckout)
             {
                 /***** Selective clone **********/
                 clone.append("git clone --depth 1 --quiet --no-checkout --filter=blob:none ");
@@ -287,7 +295,7 @@ void processLibs(void)
                     processBook(libName, books[i].GetString());
                 makefile << endl;
             }
-            if(CHECKOUT_TYPE_SELECTIVE == selectiveCheckout)
+            if (CHECKOUT_TYPE_SELECTIVE == selectiveCheckout)
             {
                 /*If we are doing selective clone then we must explicitly checkout for the uC book as well*/
                 processBook(libName, "uC");
@@ -464,8 +472,9 @@ int main(int argc, char *argv[])
     uMakefile.ParseStream(isw);
     /********************/
 
-    if(CHECKOUT_TYPE_SELECTIVE == selectiveCheckout)
-        cout << "Selective checkout enabled, this may take a while!" << endl << endl;
+    if (CHECKOUT_TYPE_SELECTIVE == selectiveCheckout)
+        cout << "Selective checkout enabled, this may take a while!" << endl
+             << endl;
 
     /*Process libraries*/
     processLibs();
@@ -473,16 +482,23 @@ int main(int argc, char *argv[])
     makefile << ".PHONY: all directory clean size\n\n";
 
     parseUmakefile();
-    parseMicrocontroller(uMakefile,makefile, customLinker);
+    parseMicrocontroller(uMakefile, makefile, customLinker);
 
     /*Generate bulk of Makefile
     * Order of function calls here matters!
     */
     generateToolchainArm_none_eabi(makefile);
-    generateTargetAll(makefile);
-    generateTargetProgram(makefile);
-    generateTargetReset(makefile);
-    generateTargetChipErase(makefile);
+
+    processTargets(uMakefile, makefile);
+
+    if (!hasCustomTargetAll)
+        generateTargetAll(makefile);
+    if (!hasCustomTargetProgram)
+        generateTargetProgram(makefile);
+    if (!hasCustomTargetReset)
+        generateTargetReset(makefile);
+    if (!hasCustomTargetChipErase)
+        generateTargetChipErase(makefile);
     generateBoilerPlate(makefile);
 
     makefile.close();

@@ -15,11 +15,36 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define CHECKOUT_TYPE_FAST 0
-#define CHECKOUT_TYPE_SELECTIVE 1
+#include <sam.h>
+#include <gpio.h>
+#include <delay.h>
+#include <osc.h>
 
-/*Allow for overriding in-built targets*/
-extern bool hasCustomTargetAll;
-extern bool hasCustomTargetProgram;
-extern bool hasCustomTargetReset;
-extern bool hasCustomTargetChipErase;
+#include "hal.h"
+#include "system.h"
+
+void main(void)
+{
+	unsigned long delayLast;
+
+	oscSet(OSC_INT8);
+
+	GPIO_PIN_DIR(SAM_GPIO_PMUX_A, 6, GPIO_DIR_OUT);
+	GPIO_PIN_OUT(SAM_GPIO_PMUX_A, 6, GPIO_OUT_LOW);
+
+	GPIO_PIN_DIR(SAM_GPIO_PMUX_A, 7, GPIO_DIR_OUT);
+	GPIO_PIN_OUT(SAM_GPIO_PMUX_A, 7, GPIO_OUT_HIGH);
+
+	delaySetup(UP_CLK / 1000); /*Clock timer at 1mS*/
+
+	delayLast = delayGetTicks();
+	while (1)
+	{
+		if (delayMicros(delayLast, 1000))
+		{
+			delayLast = delayGetTicks();
+			GPIO_PIN_TGL(SAM_GPIO_PMUX_A, 7);
+			GPIO_PIN_TGL(SAM_GPIO_PMUX_A, 6);
+		}
+	}
+}

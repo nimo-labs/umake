@@ -15,11 +15,4 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define CHECKOUT_TYPE_FAST 0
-#define CHECKOUT_TYPE_SELECTIVE 1
-
-/*Allow for overriding in-built targets*/
-extern bool hasCustomTargetAll;
-extern bool hasCustomTargetProgram;
-extern bool hasCustomTargetReset;
-extern bool hasCustomTargetChipErase;
+void processTargets(rapidjson::Document &uMakefile, std::ofstream &makefile);
