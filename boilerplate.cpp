@@ -86,7 +86,7 @@ void generateTargetAll(std::ofstream &makefile)
 
 void generateTargetProgram(std::ofstream &makefile)
 {
-    makefile << "program: directory $(BUILD)/$(BIN).hex\n";
+    makefile << "program: $(BUILD)/$(BIN).hex\n";
     makefile << "\tkillall -s 9 openocd || true\n";
     makefile << "\topenocd -d1 -f ./openocd.cfg -c init -c \" halt \" -c \" flash write_image erase $(BUILD)/${BIN}.hex \" -c \" verify_image $(BUILD)/${BIN}.hex \" -c \" reset run \" -c \" exit \"\n\n";
 }

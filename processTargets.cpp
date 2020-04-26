@@ -70,13 +70,16 @@ void processTargets(rapidjson::Document &uMakefile, std::ofstream &makefile)
 
                     makefile << targetName << ": ";
                 }
-                else if (0 == string("depends").compare(itr2->name.GetString())) /*Output target name*/
+
+                if (0 == string("depends").compare(itr2->name.GetString())) /*Output target name*/
                 {
-                    makefile << itr2->value.GetString();
+                    makefile << itr2->value.GetString() << endl;
                 }
-                else if (0 == string("content").compare(itr2->name.GetString())) /*Output target contents*/
+
+                if (0 == string("content").compare(itr2->name.GetString())) /*Output target contents*/
                 {
-                    makefile << "\n";
+                    if (!target.HasMember("depends"))
+                        makefile << endl;
                     /*Iterate through content array*/
                     const Value &targetContent = target["content"];
                     assert(targetContent.IsArray());
@@ -85,10 +88,6 @@ void processTargets(rapidjson::Document &uMakefile, std::ofstream &makefile)
                         makefile << "\t" << targetContent[i].GetString() << "\n";
                     }
                     makefile << endl;
-                }
-                else
-                {
-                    /* code */
                 }
             }
         }
