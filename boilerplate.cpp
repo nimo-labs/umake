@@ -65,11 +65,6 @@ void generateBoilerPlate(std::ofstream &makefile)
     makefile << "\t@echo OBJCOPY $@\n";
     makefile << "\t@$(OBJCOPY) -O binary $^ $@\n\n";
 
-    // makefile << "# c++ source\n";
-    // makefile << "$(BUILD)/%.o: %.cpp\n";
-    // makefile << "\t@echo CPP $@\n";
-    // makefile << "\t@${CPP}  $(CPPFLAGS) $(CFLAGS) -c $< -o $(addprefix ${BUILD}/, $(notdir $@))\n\n";
-
     makefile << "size: $(BUILD)/$(BIN).elf\n";
     makefile << "\t@echo size:\n";
     makefile << "\t@$(SIZE) -t $^\n";
