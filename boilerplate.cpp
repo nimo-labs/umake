@@ -38,12 +38,17 @@ void generateBoilerPlate(std::ofstream &makefile)
 
     /*Generate object list with reference to build directory*/
     makefile << "OBJS = $(addprefix $(BUILD)/, $(subst .c,.o, $(notdir $(SRCS))))" << endl;
-    //makefile << "OBJS += $(addprefix $(BUILD)/, $(subst .cpp,.o, $(CPPSRCS)))" << endl;
+    makefile << "OBJS += $(addprefix $(BUILD)/, $(subst .cpp,.o, $(CPPSRCS)))" << endl;
 
     makefile << endl;
     makefile << "define UMAKE_MAKEC" << endl;
     makefile << "@echo CC $@" << endl;
     makefile << "@${CC}  $(CPPFLAGS) $(CFLAGS) -c $< -o $(addprefix ${BUILD}/, $(notdir $@))" << endl;
+    makefile << "endef" << endl;
+    makefile << endl;
+    makefile << "define UMAKE_MAKECPP" << endl;
+    makefile << "@echo CPP $@" << endl;
+    makefile << "@${CPP}  $(CPPFLAGS) $(CFLAGS) -c $< -o $(addprefix ${BUILD}/, $(notdir $@))" << endl;
     makefile << "endef" << endl;
     makefile << endl
              << endl;
@@ -60,19 +65,10 @@ void generateBoilerPlate(std::ofstream &makefile)
     makefile << "\t@echo OBJCOPY $@\n";
     makefile << "\t@$(OBJCOPY) -O binary $^ $@\n\n";
 
-    // makefile << "# c source\n";
-    // makefile << "$(BUILD)/%.o: %.c\n";
-    // makefile << "\t@echo CC $@ $<\n";
-    // makefile << "\t@$(NIMO_MAKEC)" << endl
-    //          << endl;
-
     // makefile << "# c++ source\n";
     // makefile << "$(BUILD)/%.o: %.cpp\n";
     // makefile << "\t@echo CPP $@\n";
     // makefile << "\t@${CPP}  $(CPPFLAGS) $(CFLAGS) -c $< -o $(addprefix ${BUILD}/, $(notdir $@))\n\n";
-
-    makefile << "directory:\n";
-    makefile << "\t@mkdir -p $(BUILD)\n\n";
 
     makefile << "size: $(BUILD)/$(BIN).elf\n";
     makefile << "\t@echo size:\n";
@@ -83,7 +79,7 @@ void generateBoilerPlate(std::ofstream &makefile)
     makefile << "\t@-rm -rf $(BUILD)\n";
     makefile << "\t@-rm -rf ../*~\n\n";
 
-    makefile << "include depfile" << endl;
+    makefile << "include build/depfile" << endl;
 }
 
 void generateTargetAll(std::ofstream &makefile)
