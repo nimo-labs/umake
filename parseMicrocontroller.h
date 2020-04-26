@@ -15,4 +15,4 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-void parseMicrocontroller(rapidjson::Document& uMakefile, std::ofstream& makefile, unsigned char customerLinker);
+void parseMicrocontroller(rapidjson::Document &uMakefile, std::ofstream &makefile, std::ofstream &depfile, unsigned char customerLinker);

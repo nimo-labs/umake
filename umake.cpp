@@ -36,6 +36,7 @@
 
 rapidjson::Document uMakefile;
 std::ofstream makefile;
+std::ofstream depfile;
 
 using namespace rapidjson;
 using namespace std;
@@ -56,6 +57,15 @@ bool hasCustomTargetChipErase = 0;
     cout << endl           \
          << endl
 
+static bool replace(std::string &str, const std::string &from, const std::string &to)
+{
+    size_t start_pos = str.find(from);
+    if (start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
 void processBook(string libName, string bookName)
 {
     rapidjson::Document book;
@@ -65,6 +75,7 @@ void processBook(string libName, string bookName)
     const string strLanguage = "language";
 
     string fileName;
+    string objName;
     string language;
 
     /*Get book definition*/
@@ -171,6 +182,13 @@ void processBook(string libName, string bookName)
         }
         makefile << "./umake/" << libName << "/" << bookName << "/";
         makefile << fileName << endl;
+
+        depfile << "./build/";
+        objName = fileName;
+        replace(objName, ".c", ".o");
+        depfile << objName << ": "
+                << "./umake/" << libName << "/" << bookName << "/" << fileName << endl;
+        depfile << "\t$(UMAKE_MAKEC)" << endl;
     }
 
     if (book.HasMember("cflags"))
@@ -314,6 +332,8 @@ void processLibs(void)
 
 void parseUmakefile(void)
 {
+    string objName;
+    string fileName;
 
     if (uMakefile.HasMember("buildDir"))
     {
@@ -367,7 +387,18 @@ void parseUmakefile(void)
         assert(sources.IsArray());
         for (SizeType i = 0; i < sources.Size(); i++) // Uses SizeType instead of size_t
         {
-            makefile << "SRCS += " << sources[i].GetString() << endl;
+            fileName = sources[i].GetString();
+            makefile << "SRCS += " << fileName << endl;
+
+            if ((0 != fileName.substr(0, 5).compare(string("build"))) &&
+                (0 != fileName.substr(1, 5).compare(string("build"))) &&
+                (0 != fileName.substr(2, 5).compare(string("build"))))
+                depfile << "./build/";
+            objName = fileName;
+            replace(objName, ".c", ".o");
+            depfile << objName << ": "
+                    << fileName << endl;
+            depfile << "\t$(UMAKE_MAKEC)" << endl;
         }
         makefile << endl;
     }
@@ -381,7 +412,15 @@ void parseUmakefile(void)
         assert(sources.IsArray());
         for (SizeType i = 0; i < sources.Size(); i++) // Uses SizeType instead of size_t
         {
-            makefile << "CPPSRCS += " << sources[i].GetString() << endl;
+            fileName = sources[i].GetString();
+            makefile << "CPPSRCS += " << fileName << endl;
+
+            depfile << "./build/";
+            objName = fileName;
+            replace(objName, ".cpp", ".o");
+            depfile << objName << ": "
+                    << fileName << endl;
+            depfile << "\t$(UMAKE_MAKEC)" << endl;
         }
         makefile << endl;
     }
@@ -453,6 +492,7 @@ int main(int argc, char *argv[])
             system("make clean");
             system("rm -rf ./umake");
             system("rm -f Makefile");
+            system("rm -f depfile");
             exit(0);
         }
 
@@ -461,6 +501,8 @@ int main(int argc, char *argv[])
 
     /*output Makefile*/
     makefile.open("Makefile");
+    /*output depfile*/
+    depfile.open("depfile");
 
     /*Create umake dir if it doesn't exist*/
     if (mkdir("umake", 0700) != 0 && errno != EEXIST)
@@ -482,7 +524,7 @@ int main(int argc, char *argv[])
     makefile << ".PHONY: all directory clean size\n\n";
 
     parseUmakefile();
-    parseMicrocontroller(uMakefile, makefile, customLinker);
+    parseMicrocontroller(uMakefile, makefile, depfile, customLinker);
 
     /*Generate bulk of Makefile
     * Order of function calls here matters!
@@ -507,5 +549,6 @@ int main(int argc, char *argv[])
     generateBoilerPlate(makefile);
 
     makefile.close();
+    depfile.close();
     return 0;
 }

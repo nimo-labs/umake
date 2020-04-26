@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "rapidjson/document.h"		// rapidjson's DOM-style API
+#include "rapidjson/document.h"     // rapidjson's DOM-style API
 #include "rapidjson/prettywriter.h" // for stringify JSON
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/error/en.h"
@@ -37,10 +37,22 @@ static bool isHostLinux(void)
 #endif
 }
 
-void parseMicrocontroller(rapidjson::Document& uMakefile, std::ofstream& makefile, unsigned char customLinker)
+static bool replace(std::string &str, const std::string &from, const std::string &to)
+{
+    size_t start_pos = str.find(from);
+    if (start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
+void parseMicrocontroller(rapidjson::Document &uMakefile, std::ofstream &makefile, std::ofstream &depfile, unsigned char customLinker)
 {
     rapidjson::Document microController;
     string tmpString;
+
+    string objName;
+    string fileName;
 
     /*Get microcontroller definition*/
     string fn = "./umake/nimolib/uC/uc_";
@@ -116,6 +128,15 @@ void parseMicrocontroller(rapidjson::Document& uMakefile, std::ofstream& makefil
             assert(microController.HasMember("startupFile"));
             makefile << "# Startup file\n";
             makefile << "SRCS += " << microController["startupFile"].GetString() << "\n";
+
+            fileName = microController["startupFile"].GetString();
+
+            depfile << "./build/";
+            objName = fileName.substr(fileName.find_last_of("/") + 1, fileName.length() - fileName.find_last_of("/") - 1);
+            replace(objName, ".c", ".o");
+            depfile << objName << ": "
+                    << fileName << endl;
+            depfile << "\t$(UMAKE_MAKEC)" << endl;
         }
         makefile << endl;
     }
