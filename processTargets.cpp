@@ -31,8 +31,7 @@ using namespace std;
 
 void processTargets(rapidjson::Document &uMakefile, std::ofstream &makefile)
 {
-    const string strTargetName = "targetName";
-    const string strTargetContent = "content";
+    string targetName;
 
     if (uMakefile.HasMember("targets"))
     {
@@ -41,6 +40,7 @@ void processTargets(rapidjson::Document &uMakefile, std::ofstream &makefile)
         assert(targets.IsArray()); // attributes is an array
 
         /*Iterate through targets array*/
+        makefile << "# custom targets" << endl;
         for (rapidjson::Value::ConstValueIterator itr = targets.Begin(); itr != targets.End(); ++itr)
         {
             const rapidjson::Value &target = *itr;
@@ -48,15 +48,29 @@ void processTargets(rapidjson::Document &uMakefile, std::ofstream &makefile)
             /*Iterate through each individual library object*/
             for (rapidjson::Value::ConstMemberIterator itr2 = target.MemberBegin(); itr2 != target.MemberEnd(); ++itr2)
             {
-                if (0 == strTargetName.compare(itr2->name.GetString())) /*Output target name*/
+                if (0 == string("targetName").compare(itr2->name.GetString())) /*Output target name*/
                 {
                     /*Check to see if the target overrides one of the default targets*/
-                    if (0 == std::string("program").compare(itr2->value.GetString()))
+                    if (0 == string("all").compare(itr2->value.GetString()))
+                    {
+                        hasCustomTargetAll = 1;
+                        targetName = "_all";
+                    }
+                    else
+                    {
+                        targetName = itr2->value.GetString();
+                    }
+
+                    if (0 == string("program").compare(itr2->value.GetString()))
                         hasCustomTargetProgram = 1;
-                    makefile << "# custom targets" << endl;
-                    makefile << itr2->value.GetString() << ":\n";
+                    if (0 == string("reset").compare(itr2->value.GetString()))
+                        hasCustomTargetReset = 1;
+                    if (0 == string("chip-erase").compare(itr2->value.GetString()))
+                        hasCustomTargetChipErase = 1;
+
+                    makefile << targetName << ":\n";
                 }
-                else if (0 == strTargetContent.compare(itr2->name.GetString())) /*Output target contents*/
+                else if (0 == string("content").compare(itr2->name.GetString())) /*Output target contents*/
                 {
                     /*Iterate through content array*/
                     const Value &targetContent = target["content"];

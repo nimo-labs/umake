@@ -489,7 +489,12 @@ int main(int argc, char *argv[])
     */
     generateToolchainArm_none_eabi(makefile);
 
+    makefile << "all: directory _all" << endl
+             << endl;
+
     processTargets(uMakefile, makefile);
+
+    makefile << "# Default targets" << endl;
 
     if (!hasCustomTargetAll)
         generateTargetAll(makefile);

@@ -23,7 +23,7 @@
 
 using namespace std;
 
-void generateToolchainArm_none_eabi(std::ofstream& makefile)
+void generateToolchainArm_none_eabi(std::ofstream &makefile)
 {
     makefile << "CC = arm-none-eabi-gcc\n";
     makefile << "CPP = arm-none-eabi-g++\n";
@@ -31,7 +31,7 @@ void generateToolchainArm_none_eabi(std::ofstream& makefile)
     makefile << "SIZE = arm-none-eabi-size\n\n";
 }
 
-void generateBoilerPlate(std::ofstream& makefile)
+void generateBoilerPlate(std::ofstream &makefile)
 {
     /*Add includes and defines to CFLAGS*/
     makefile << "CFLAGS += ${INCLUDES} ${DEFINES}" << endl;
@@ -79,26 +79,26 @@ void generateBoilerPlate(std::ofstream& makefile)
     makefile << "-include $(wildcard $(BUILD)/*.d)\n\n";
 }
 
-void generateTargetAll(std::ofstream& makefile)
+void generateTargetAll(std::ofstream &makefile)
 {
-    makefile << "all: directory $(BUILD)/$(BIN).elf $(BUILD)/$(BIN).hex $(BUILD)/$(BIN).bin size\n\n";
+    makefile << "_all: $(BUILD)/$(BIN).hex $(BUILD)/$(BIN).bin size\n\n";
 }
 
-void generateTargetProgram(std::ofstream& makefile)
+void generateTargetProgram(std::ofstream &makefile)
 {
     makefile << "program: directory $(BUILD)/$(BIN).hex\n";
     makefile << "\tkillall -s 9 openocd || true\n";
     makefile << "\topenocd -d1 -f ./openocd.cfg -c init -c \" halt \" -c \" flash write_image erase $(BUILD)/${BIN}.hex \" -c \" verify_image $(BUILD)/${BIN}.hex \" -c \" reset run \" -c \" exit \"\n\n";
 }
 
-void generateTargetReset(std::ofstream& makefile)
+void generateTargetReset(std::ofstream &makefile)
 {
     makefile << "reset: $(BUILD)/$(BIN).hex\n";
     makefile << "\tkillall -s 9 openocd || true\n";
     makefile << "\topenocd -d1 -f ./openocd.cfg -c init -c \" reset \" -c \" exit \"\n\n";
 }
 
-void generateTargetChipErase(std::ofstream& makefile)
+void generateTargetChipErase(std::ofstream &makefile)
 {
     makefile << "chip-erase:\n";
     makefile << "\tkillall -s 9 openocd || true\n";
