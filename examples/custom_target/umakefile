@@ -33,6 +33,7 @@
 		},
 		{
 			"targetName": "newTarget",
+			"depends": "a.c b.c c.c",
 			"content":[
 				"line 4",
 				"line 5",

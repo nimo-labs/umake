@@ -68,10 +68,15 @@ void processTargets(rapidjson::Document &uMakefile, std::ofstream &makefile)
                     if (0 == string("chip-erase").compare(itr2->value.GetString()))
                         hasCustomTargetChipErase = 1;
 
-                    makefile << targetName << ":\n";
+                    makefile << targetName << ": ";
+                }
+                else if (0 == string("depends").compare(itr2->name.GetString())) /*Output target name*/
+                {
+                    makefile << itr2->value.GetString();
                 }
                 else if (0 == string("content").compare(itr2->name.GetString())) /*Output target contents*/
                 {
+                    makefile << "\n";
                     /*Iterate through content array*/
                     const Value &targetContent = target["content"];
                     assert(targetContent.IsArray());
