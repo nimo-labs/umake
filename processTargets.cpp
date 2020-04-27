@@ -92,9 +92,4 @@ void processTargets(rapidjson::Document &uMakefile, std::ofstream &makefile)
             }
         }
     }
-    else
-    {
-        cout << "Error. No targets defined." << endl;
-        exit(1);
-    }
 }
