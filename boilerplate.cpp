@@ -71,7 +71,7 @@ void generateBoilerPlate(std::ofstream &makefile)
 
     makefile << "clean:\n";
     makefile << "\t@echo clean\n";
-    makefile << "\t@-rm -rf $(BUILD)\n";
+    makefile << "\tfind ./build ! -name 'depfile' -type f -exec rm -f {} +\n";
     makefile << "\t@-rm -rf ../*~\n\n";
 
     makefile << "include build/depfile" << endl;
