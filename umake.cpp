@@ -485,6 +485,13 @@ int main(int argc, char *argv[])
 {
     string line, text;
 
+    FILE *existTest;
+    existTest = fopen("umakefile", "r");
+    if (NULL == existTest)
+    {
+        cout << "Error: umakefile doesn't exist in this directory" << endl;
+        exit(1);
+    }
     /*Deal with umake clean*/
     if (argc > 1)
         if (0 == strncmp(argv[1], "clean", 5))
