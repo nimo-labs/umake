@@ -492,6 +492,7 @@ int main(int argc, char *argv[])
         cout << "Error: umakefile doesn't exist in this directory" << endl;
         exit(1);
     }
+    fclose(existTest);
     /*Deal with umake clean*/
     if (argc > 1)
         if (0 == strncmp(argv[1], "clean", 5))
