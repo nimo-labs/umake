@@ -395,6 +395,9 @@ void parseUmakefile(void)
                     (0 != fileName.substr(2, 5).compare(string("build"))))
                 depfile << "./build/";
             objName = fileName;
+            /*Remove path from objname*/
+            objName = objName.substr(objName.find_last_of('/')+1);
+
             if(0 == objName.compare(objName.length()-2, 2, ".c"))
                 replace(objName, ".c", ".o");
             if(0 == objName.compare(objName.length()-2, 2, ".S"))
@@ -420,6 +423,8 @@ void parseUmakefile(void)
 
             depfile << "./build/";
             objName = fileName;
+            /*Remove path from objname*/
+            objName = objName.substr(objName.find_last_of('/')+1);
             replace(objName, ".cpp", ".o");
             depfile << objName << ": "
                     << fileName << endl;
