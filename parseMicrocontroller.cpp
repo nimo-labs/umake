@@ -127,13 +127,19 @@ void parseMicrocontroller(rapidjson::Document &uMakefile, std::ofstream &makefil
         {
             assert(microController.HasMember("startupFile"));
             makefile << "# Startup file\n";
-            makefile << "SRCS += " << microController["startupFile"].GetString() << "\n";
-
             fileName = microController["startupFile"].GetString();
+
+            if(0 == fileName.compare(fileName.length()-2, 2, ".c"))
+                makefile << "SRCS += " << fileName << "\n";
+            if(0 == fileName.compare(fileName.length()-2, 2, ".S"))
+                makefile << "ASRCS += " << fileName << "\n";
 
             depfile << "./build/";
             objName = fileName.substr(fileName.find_last_of("/") + 1, fileName.length() - fileName.find_last_of("/") - 1);
-            replace(objName, ".c", ".o");
+            if(0 == objName.compare(objName.length()-2, 2, ".c"))
+                replace(objName, ".c", ".o");
+            if(0 == objName.compare(objName.length()-2, 2, ".S"))
+                replace(objName, ".S", ".o");
             depfile << objName << ": "
                     << fileName << endl;
             depfile << "\t$(UMAKE_MAKEC)" << endl;

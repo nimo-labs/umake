@@ -391,11 +391,14 @@ void parseUmakefile(void)
             makefile << "SRCS += " << fileName << endl;
 
             if ((0 != fileName.substr(0, 5).compare(string("build"))) &&
-                (0 != fileName.substr(1, 5).compare(string("build"))) &&
-                (0 != fileName.substr(2, 5).compare(string("build"))))
+                    (0 != fileName.substr(1, 5).compare(string("build"))) &&
+                    (0 != fileName.substr(2, 5).compare(string("build"))))
                 depfile << "./build/";
             objName = fileName;
-            replace(objName, ".c", ".o");
+            if(0 == objName.compare(objName.length()-2, 2, ".c"))
+                replace(objName, ".c", ".o");
+            if(0 == objName.compare(objName.length()-2, 2, ".S"))
+                replace(objName, ".S", ".o");
             depfile << objName << ": "
                     << fileName << endl;
             depfile << "\t$(UMAKE_MAKEC)" << endl;

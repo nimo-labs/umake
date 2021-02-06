@@ -38,6 +38,7 @@ void generateBoilerPlate(std::ofstream &makefile)
 
     /*Generate object list with reference to build directory*/
     makefile << "OBJS = $(addprefix $(BUILD)/, $(subst .c,.o, $(notdir $(SRCS))))" << endl;
+    makefile << "OBJS += $(addprefix $(BUILD)/, $(subst .S,.o, $(notdir $(ASRCS))))" << endl;
     makefile << "OBJS += $(addprefix $(BUILD)/, $(subst .cpp,.o, $(CPPSRCS)))" << endl;
 
     makefile << endl;
