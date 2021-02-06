@@ -1,0 +1,32 @@
+{
+	"target": "nimoEnergyMonitor",
+    "microcontroller": "m032ld2ae",
+    "toolchain": "arm-none-eabi",
+    "c_sources": [
+        "main.c",
+		"./umake/nimolib/uC/m032/_syscalls.c",
+		"gpio.c"
+    ],
+    "includes": [
+        "./"
+    ],
+    "buildDir": "./build",
+    "libraries": [
+     	{
+           	"libName": "nimolib",
+           	"libPath": "https://github.com/nimo-labs/nimolib.git",
+    		"books":[
+        	]
+	    }
+	],
+	"targets":[
+		{
+			"targetName": "program",
+			"depends": "all",
+			"content":[
+				"killall -s 9 openocd || true",
+				"~/OpenOCD/bin/openocd -f ./umake/nimolib/uC/m032/openocd/openocd_probe.cfg -f ./umake/nimolib/uC/m032/openocd/openocd_chip.cfg -d1 -c init -c \" halt \" -c \" flash write_image erase $(BUILD)/${BIN}.hex \" -c \" verify_image $(BUILD)/${BIN}.hex \" -c \" reset run \" -c \" exit \""
+			]
+		}
+	]
+}
