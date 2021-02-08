@@ -299,6 +299,19 @@ void processLibs(void)
                 clone.append(library["branch"].GetString());
                 cout << clone << endl;
                 system(clone.c_str());
+
+                /*Make sure we get the latest branch commits*/
+                clone.clear();
+                clone.append("git fetch origin ");
+                clone.append(library["branch"].GetString());
+                cout << clone << endl;
+                system(clone.c_str());
+
+                clone.clear();
+                clone.append("git reset --hard FETCH_HEAD");
+                cout << clone << endl;
+                system(clone.c_str());
+
                 chdir("..");
             }
             /*Process books for this library*/
