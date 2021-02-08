@@ -295,7 +295,7 @@ void processLibs(void)
             {
                 chdir(libName.c_str());
                 clone.clear();
-                clone.append("git checkout ");
+                clone.append("git checkout -b ");
                 clone.append(library["branch"].GetString());
                 cout << clone << endl;
                 system(clone.c_str());
