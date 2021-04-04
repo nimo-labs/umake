@@ -25,26 +25,26 @@
 
 void main(void)
 {
-	unsigned long delayLast;
+    unsigned long delayLast;
 
-	oscSet(OSC_INT8);
+    oscSet(OSC_INT8);
 
-	GPIO_PIN_DIR(SAM_GPIO_PMUX_A, 6, GPIO_DIR_OUT);
-	GPIO_PIN_OUT(SAM_GPIO_PMUX_A, 6, GPIO_OUT_LOW);
+    GPIO_PIN_DIR(SAM_GPIO_PMUX_A, 6, GPIO_DIR_OUT);
+    GPIO_PIN_OUT(SAM_GPIO_PMUX_A, 6, GPIO_OUT_LOW);
 
-	GPIO_PIN_DIR(SAM_GPIO_PMUX_A, 7, GPIO_DIR_OUT);
-	GPIO_PIN_OUT(SAM_GPIO_PMUX_A, 7, GPIO_OUT_HIGH);
+    GPIO_PIN_DIR(SAM_GPIO_PMUX_A, 7, GPIO_DIR_OUT);
+    GPIO_PIN_OUT(SAM_GPIO_PMUX_A, 7, GPIO_OUT_HIGH);
 
-	delaySetup(UP_CLK / 1000); /*Clock timer at 1mS*/
+    delaySetup(UP_CLK / 1000); /*Clock timer at 1mS*/
 
-	delayLast = delayGetTicks();
-	while (1)
-	{
-		if (delayMicros(delayLast, 1000))
-		{
-			delayLast = delayGetTicks();
-			GPIO_PIN_TGL(SAM_GPIO_PMUX_A, 7);
-			GPIO_PIN_TGL(SAM_GPIO_PMUX_A, 6);
-		}
-	}
+    delayLast = delayGetTicks();
+    while (1)
+    {
+        if (delayMillis(delayLast, 1000))
+        {
+            delayLast = delayGetTicks();
+            GPIO_PIN_TGL(SAM_GPIO_PMUX_A, 7);
+            GPIO_PIN_TGL(SAM_GPIO_PMUX_A, 6);
+        }
+    }
 }
