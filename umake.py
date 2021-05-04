@@ -17,7 +17,36 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
     for lib in umakefileJson["libraries"]:
         currentLib = lib["libName"]
         print("Processing library: %s" % currentLib)
-        os.system("git clone %s" % lib["libPath"])
+        cmd = "git clone --depth 1 %s" % lib["libPath"]
+        print(cmd)
+        if 0 != os.system(cmd):
+            # We've already cloned the repo, so check for updates
+            os.chdir(currentLib)
+            os.system("git pull")
+            os.chdir("..")
+
+        # Check to see if umakefile specifies a checkout hash
+        if "checkout" in lib:
+            os.chdir(currentLib)
+            os.system("git checkout %s" % lib["checkout"])
+            os.chdir("..")
+
+        # Check to see if umkaefile specifies a checkout branch
+        if "branch" in lib:
+            os.chdir(currentLib)
+            cmd = "git checkout -b %s" % lib["branch"]
+            print(cmd)
+            os.system(cmd)
+
+            # Make sure we get the latest branch commits
+            #os.system("git reset --hard origin/" + lib["branch"])
+            cmd = "git fetch origin " + lib["branch"]
+            print(cmd)
+            os.system(cmd)
+
+            os.system("git reset --hard FETCH_HEAD")
+            os.chdir("..")
+
         os.chdir(currentLib)
         makefileHandle.write("# %s: books\n" % currentLib)
 
@@ -135,7 +164,7 @@ def defaultTgtMain():
 
 def defaultTgtReset():
     makefileHandle.write(
-        """
+            """
 reset: $(BUILD)/$(BIN).hex
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"reset\" -c \"exit\"""")
@@ -143,7 +172,7 @@ reset: $(BUILD)/$(BIN).hex
 
 def defaultTgtChipErase():
     makefileHandle.write(
-        """
+            """
 chip-erase:
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"at91samd chip-erase\" -c \"exit\"""")
@@ -151,7 +180,7 @@ chip-erase:
 
 def defaultTgtSize():
     makefileHandle.write(
-        """
+            """
 size: $(BUILD)/$(BIN).elf
 	@echo size:
 	@$(SIZE) -t $^""")
@@ -159,7 +188,7 @@ size: $(BUILD)/$(BIN).elf
 
 def defaultTgtClean():
     makefileHandle.write(
-        """
+            """
 clean:
 	@echo clean
 	find ./build ! -name 'depfile' -type f -exec rm -f {} +
@@ -178,8 +207,12 @@ try:
 except OSError:
     print("Creation of the directory %s failed" % WORKING_DIR())
 
-with open('./umakefile', 'r') as handle:
-    umakefileJson = json.load(handle)
+try:
+    with open('./umakefile', 'r') as handle:
+        umakefileJson = json.load(handle)
+except:
+    print("./umakefile not found.")
+    exit(0)
 
 if(len(sys.argv) > 1):
     # We have command line args
