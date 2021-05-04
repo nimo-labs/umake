@@ -4,6 +4,13 @@ import json
 import os
 import sys
 
+# setting these to True inhibits generation of the corrisponding default target
+inhibDefaultTgtMain = False
+inhibDefaultTgtReset = False
+inhibDefaultTgtChipErase = False
+inhibDefaultTgtSize = False
+inhibDefaultTgtClean = False
+
 
 def WORKING_DIR():
     return "umake"
@@ -164,7 +171,7 @@ def defaultTgtMain():
 
 def defaultTgtReset():
     makefileHandle.write(
-            """
+        """
 reset: $(BUILD)/$(BIN).hex
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"reset\" -c \"exit\"""")
@@ -172,7 +179,7 @@ reset: $(BUILD)/$(BIN).hex
 
 def defaultTgtChipErase():
     makefileHandle.write(
-            """
+        """
 chip-erase:
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"at91samd chip-erase\" -c \"exit\"""")
@@ -180,7 +187,7 @@ chip-erase:
 
 def defaultTgtSize():
     makefileHandle.write(
-            """
+        """
 size: $(BUILD)/$(BIN).elf
 	@echo size:
 	@$(SIZE) -t $^""")
@@ -188,7 +195,7 @@ size: $(BUILD)/$(BIN).elf
 
 def defaultTgtClean():
     makefileHandle.write(
-            """
+        """
 clean:
 	@echo clean
 	find ./build ! -name 'depfile' -type f -exec rm -f {} +
@@ -279,14 +286,42 @@ makefileHandle.write("all: _all\n")
 
 # Custom targets
 makefileHandle.write("\n# Custom targets\n")
+if "targets" in umakefileJson:
+    print("Custom targets")
+    for custTargs in umakefileJson["targets"]:
+        print(custTargs["targetName"])
+        # Check if there is a default for this target, if so disable its generation
+        if(custTargs["targetName"].lower() == "main"):
+            inhibDefaultTgtMain = True
+        if(custTargs["targetName"].lower() == "reset"):
+            inhibDefaultTgtReset = True
+        if(custTargs["targetName"].lower() == "chiperase"):
+            inhibDefaultTgtChipErase = True
+        if(custTargs["targetName"].lower() == "size"):
+            inhibDefaultTgtSize = True
+        if(custTargs["targetName"].lower() == "clean"):
+            inhibDefaultTgtClean = True
+
+        # Generate custom target
+        makefileHandle.write("%s: %s\n" %
+                             (custTargs["targetName"], custTargs["depends"]))
+        for content in custTargs["content"]:
+            makefileHandle.write("\t%s\n" % content)
+        makefileHandle.write("\n")
+
 
 # Default targets
 makefileHandle.write("\n# Default targets\n")
-defaultTgtMain()
-defaultTgtReset()
-defaultTgtChipErase()
-defaultTgtSize()
-defaultTgtClean()
+if False == inhibDefaultTgtMain:
+    defaultTgtMain()
+if False == inhibDefaultTgtReset:
+    defaultTgtReset()
+if False == inhibDefaultTgtChipErase:
+    defaultTgtChipErase()
+if False == inhibDefaultTgtSize:
+    defaultTgtSize()
+if False == inhibDefaultTgtClean:
+    defaultTgtClean()
 
 # Boiler plate
 makefileHandle.write("\n# Boiler plate\n")
