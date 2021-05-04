@@ -17,7 +17,7 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
     for lib in umakefileJson["libraries"]:
         currentLib = lib["libName"]
         print("Processing library: %s" % currentLib)
-        cmd = "git clone --depth 1 %s" % lib["libPath"]
+        cmd = "git clone --quiet --depth 1 %s" % lib["libPath"]
         print(cmd)
         if 0 != os.system(cmd):
             # We've already cloned the repo, so check for updates
@@ -39,7 +39,7 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
             os.system(cmd)
 
             # Make sure we get the latest branch commits
-            #os.system("git reset --hard origin/" + lib["branch"])
+            # os.system("git reset --hard origin/" + lib["branch"])
             cmd = "git fetch origin " + lib["branch"]
             print(cmd)
             os.system(cmd)
@@ -251,9 +251,11 @@ makefileHandle.write("BIN = %s\n" % umakefileJson['target'])
 makefileHandle.write("\n# Project sources\n")
 makefileHandle.write("# C sources\n")
 for projSources in umakefileJson["c_sources"]:
-    makefileHandle.write("SRCS += %s" % projSources)
+    makefileHandle.write("SRCS += %s\n" % projSources)
+    rawFileName = os.path.basename(projSources)
+    rawFileName = rawFileName[:-2]
     depfileHandle.write(
-        "./build/%s.o: ./%s\n" % (projSources[:-2], projSources))
+        "./build/"+rawFileName+".o: "+projSources+"\n")
     depfileHandle.write("\t$(UMAKE_MAKEC)\n")
 
 makefileHandle.write("\n\n# Project include directories\n")
