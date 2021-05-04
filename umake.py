@@ -42,13 +42,13 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
         if "branch" in lib:
             os.chdir(currentLib)
             cmd = "git checkout -b %s" % lib["branch"]
-            print(cmd)
+            # print(cmd)
             os.system(cmd)
 
             # Make sure we get the latest branch commits
             # os.system("git reset --hard origin/" + lib["branch"])
             cmd = "git fetch origin " + lib["branch"]
-            print(cmd)
+            # print(cmd)
             os.system(cmd)
 
             os.system("git reset --hard FETCH_HEAD")
@@ -88,6 +88,19 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                 else:
                     print("Unknown language for %s/%s/%s" %
                           (currentLib, currentBook, files['fileName']))
+                if "cflags" in bookJson:
+                    makefileHandle.write("# Book CFLAGS\n")
+                    for cflags in bookJson["cflags"]:
+                        makefileHandle.write("CFLAGS += %s\n" % cflags)
+
+                if "ldflags" in bookJson:
+                    makefileHandle.write("# Book LDFLAGS\n")
+                    for ldflags in bookJson["ldflags"]:
+                        makefileHandle.write(
+                            "LDFLAGS += %s\n" % ldflags)
+
+            makefileHandle.write("\n")
+
             bookHandle.close()
             os.chdir("..")
 
@@ -96,7 +109,6 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
     microcontroller = umakefileJson['microcontroller']
     restoreDir = os.getcwd()
     os.chdir("uC")
-    print(os.getcwd())
 
     uCHandle = open("uc_"+microcontroller+"-linux-gcc.json", 'r')
     uCJson = json.load(uCHandle)
@@ -170,7 +182,7 @@ def defaultTgtMain():
 
 def defaultTgtReset():
     makefileHandle.write(
-            """
+        """
 reset: $(BUILD)/$(BIN).hex
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"reset\" -c \"exit\"""")
@@ -178,7 +190,7 @@ reset: $(BUILD)/$(BIN).hex
 
 def defaultTgtChipErase():
     makefileHandle.write(
-            """
+        """
 chip-erase:
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"at91samd chip-erase\" -c \"exit\"""")
@@ -186,7 +198,7 @@ chip-erase:
 
 def defaultTgtSize():
     makefileHandle.write(
-            """
+        """
 size: $(BUILD)/$(BIN).elf
 	@echo size:
 	@$(SIZE) -t $^""")
@@ -194,7 +206,7 @@ size: $(BUILD)/$(BIN).elf
 
 def defaultTgtClean():
     makefileHandle.write(
-            """
+        """
 clean:
 	@echo clean
 	find ./build ! -name 'depfile' -type f -exec rm -f {} +
@@ -296,9 +308,7 @@ makefileHandle.write("all: _all\n\n")
 # Custom targets
 makefileHandle.write("# Custom targets\n")
 if "targets" in umakefileJson:
-    print("Custom targets")
     for custTargs in umakefileJson["targets"]:
-        print(custTargs["targetName"])
         # Check if there is a default for this target, if so disable its generation
         if(custTargs["targetName"].lower() == "main"):
             inhibDefaultTgtMain = True
