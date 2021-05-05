@@ -290,6 +290,13 @@ if "ldflags" in umakefileJson:
         makefileHandle.write("LDFLAGS += %s\n" % ldFlags)
     makefileHandle.write("\n")
 
+# Custom linker file
+if "linkerFile" in umakefileJson:
+    makefileHandle.write("# custom linkerfile\n")
+    makefileHandle.write("LDFLAGS += -Wl,--script=%s\n" %
+                         umakefileJson["linkerFile"])
+    makefileHandle.write("\n")
+
 # Process microcontroller
 processUc(umakefileJson, makefileHandle, depfileHandle)
 
