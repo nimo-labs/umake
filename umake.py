@@ -217,6 +217,7 @@ def umakeClean(umakefileJson):
     os.system("make clean")
     os.system("rm -rf ./"+WORKING_DIR())
     os.system("rm -rf ./"+umakefileJson["buildDir"])
+    os.system("rm -rf ./Makefile")
 
 
 # MAIN
