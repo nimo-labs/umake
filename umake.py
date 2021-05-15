@@ -10,6 +10,7 @@ inhibDefaultTgtReset = False
 inhibDefaultTgtChipErase = False
 inhibDefaultTgtSize = False
 inhibDefaultTgtClean = False
+projectLinkerFile = False
 
 
 def WORKING_DIR():
@@ -129,9 +130,10 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
     for uCLdflags in uCJson["ldflags"]:
         makefileHandle.write("LDFLAGS += %s\n" % uCLdflags)
 
-    makefileHandle.write("\n# Linker file\n")
-    makefileHandle.write("LDFLAGS += -Wl,--script=%s\n" %
-                         uCJson['linkerFile'])
+    if False == projectLinkerFile:
+        makefileHandle.write("\n# Linker file\n")
+        makefileHandle.write("LDFLAGS += -Wl,--script=%s\n" %
+                             uCJson['linkerFile'])
 
     makefileHandle.write("\n# Startup file\n")
     makefileHandle.write("SRCS += %s\n" % uCJson['startupFile'])
@@ -293,6 +295,7 @@ if "ldflags" in umakefileJson:
 
 # Custom linker file
 if "linkerFile" in umakefileJson:
+    projectLinkerFile = True
     makefileHandle.write("# custom linkerfile\n")
     makefileHandle.write("LDFLAGS += -Wl,--script=%s\n" %
                          umakefileJson["linkerFile"])
