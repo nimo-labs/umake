@@ -22,7 +22,7 @@ import os
 osType = platform.system()
 
 if 'Linux' == osType:
-    os.system('cp -s ./umake.py ~/bin/umake')
+    os.system('cp -f ./umake.py ~/bin/umake')
 else:
     print("Sorry, your operating system isn't supported just yet")
     exit(1)
