@@ -22,7 +22,10 @@ import os
 osType = platform.system()
 
 if 'Linux' == osType:
-    os.system('cp -f ./umake.py ~/bin/umake')
+    if os.geteuid() != 0:
+        print("This script needs to be run as root. Try sudo !!")
+        exit(1)
+    os.system('cp -f ./umake.py /usr/local/bin/umake')
 else:
     print("Sorry, your operating system isn't supported just yet")
     exit(1)
