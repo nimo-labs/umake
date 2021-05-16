@@ -22,14 +22,15 @@ import os
 osType = platform.system()
 
 if 'Linux' == osType:
-	if os.geteuid() != 0:
-		print("This script needs to be run as root. Try sudo !!")
-		exit(1)
-	os.system('cp -f ./umake.py /usr/local/bin/umake')
-	os.system('wget https://github.com/nimo-labs/hid_bootloader_console_client/releases/download/latest/hidBoot'
-	os.system('chmod +x ./hidBoot')
-	os.system('cp -f ./hidBoot /usr/local/bin')
+    if os.geteuid() != 0:
+        print("This script needs to be run as root. Try sudo !!")
+        exit(1)
+    os.system('cp -f ./umake.py /usr/local/bin/umake')
+    os.system(
+        'wget https://github.com/nimo-labs/hid_bootloader_console_client/releases/download/latest/hidBoot')
+    os.system('chmod +x ./hidBoot')
+    os.system('cp -f ./hidBoot /usr/local/bin')
 
 else:
-	print("Sorry, your operating system isn't supported just yet")
-	exit(1)
+    print("Sorry, your operating system isn't supported just yet")
+    exit(1)
