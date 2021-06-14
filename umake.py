@@ -238,8 +238,8 @@ def defaultTgtClean():
             """
     clean:
         @echo clean
-        find ./build ! -name 'depfile' -type f -exec del /s /q {} +
-        @-del /s /q ../*~""")
+        find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
+        @-del -Force -Recurse ../*~""")
 
 
 def umakeClean(umakefileJson):
@@ -250,9 +250,9 @@ def umakeClean(umakefileJson):
         os.system("rm -rf ./Makefile")
     else:
         os.system("make clean")
-        os.system("del /s /q ./"+WORKING_DIR())
-        os.system("del /s /q ./"+umakefileJson["buildDir"])
-        os.system("del /s /q ./Makefile")
+        os.system("del -Force -Recurse ./"+WORKING_DIR())
+        os.system("del -Force -Recurse ./"+umakefileJson["buildDir"])
+        os.system("del ./Makefile")
 
 
 # MAIN
