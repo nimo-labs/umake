@@ -20,6 +20,7 @@
 import json
 import os
 import sys
+from sys import exit
 
 # setting these to True inhibits generation of the corrisponding default target
 inhibDefaultTgtMain = False
