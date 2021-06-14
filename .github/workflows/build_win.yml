@@ -25,4 +25,4 @@ jobs:
         prerelease: false
         title: "Windows Development Build"
         files: |
-          dist/umake
+          dist/umake.exe
