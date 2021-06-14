@@ -242,16 +242,16 @@ def umakeClean(umakefileJson):
 
 # MAIN
 try:
-    os.makedirs(WORKING_DIR(), exist_ok=True)
-except OSError:
-    print("Creation of the directory %s failed" % WORKING_DIR())
-
-try:
     with open('./umakefile', 'r') as handle:
         umakefileJson = json.load(handle)
 except:
     print("./umakefile not found.")
     exit(0)
+
+try:
+    os.makedirs(WORKING_DIR(), exist_ok=True)
+except OSError:
+    print("Creation of the directory %s failed" % WORKING_DIR())
 
 if(len(sys.argv) > 1):
     # We have command line args
