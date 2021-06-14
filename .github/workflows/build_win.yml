@@ -1,0 +1,28 @@
+name: Windows dev build
+
+on:
+  push:
+    branches: [ dev ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: build
+      shell: powershell
+      run: |
+        pip3 install pyinstaller
+        pyinstaller --onefile ./umake.py
+
+#bump release if successful
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "dev-win"
+        prerelease: false
+        title: "Windows Development Build"
+        files: |
+          dist/umake
