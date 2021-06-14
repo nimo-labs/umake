@@ -21,6 +21,7 @@ import json
 import os
 import sys
 from sys import exit
+import platform
 
 # setting these to True inhibits generation of the corrisponding default target
 inhibDefaultTgtMain = False
@@ -225,19 +226,33 @@ size: $(BUILD)/$(BIN).elf
 
 
 def defaultTgtClean():
-    makefileHandle.write(
-        """
-clean:
-	@echo clean
-	find ./build ! -name 'depfile' -type f -exec rm -f {} +
-	@-rm -rf ../*~""")
+    if "Linux" == platform.system():
+        makefileHandle.write(
+            """
+    clean:
+        @echo clean
+        find ./build ! -name 'depfile' -type f -exec rm -f {} +
+        @-rm -rf ../*~""")
+    else:
+        makefileHandle.write(
+            """
+    clean:
+        @echo clean
+        find ./build ! -name 'depfile' -type f -exec del /s /q {} +
+        @-del /s /q ../*~""")
 
 
 def umakeClean(umakefileJson):
-    os.system("make clean")
-    os.system("rm -rf ./"+WORKING_DIR())
-    os.system("rm -rf ./"+umakefileJson["buildDir"])
-    os.system("rm -rf ./Makefile")
+    if "Linux" == platform.system():
+        os.system("make clean")
+        os.system("rm -rf ./"+WORKING_DIR())
+        os.system("rm -rf ./"+umakefileJson["buildDir"])
+        os.system("rm -rf ./Makefile")
+    else:
+        os.system("make clean")
+        os.system("del /s /q ./"+WORKING_DIR())
+        os.system("del /s /q ./"+umakefileJson["buildDir"])
+        os.system("del /s /q ./Makefile")
 
 
 # MAIN
