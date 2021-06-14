@@ -14,6 +14,7 @@ jobs:
       run: |
         pip3 install pyinstaller
         pyinstaller --onefile ./umake.py
+        chmod +x dist/umake
 
 #bump release if successful
 
