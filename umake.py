@@ -22,6 +22,7 @@ import os
 import sys
 from sys import exit
 import platform
+import shutil
 
 # setting these to True inhibits generation of the corrisponding default target
 inhibDefaultTgtMain = False
@@ -229,30 +230,34 @@ def defaultTgtClean():
     if "Linux" == platform.system():
         makefileHandle.write(
             """
-    clean:
-        @echo clean
-        find ./build ! -name 'depfile' -type f -exec rm -f {} +
-        @-rm -rf ../*~""")
+clean:
+    @echo clean
+    find ./build ! -name 'depfile' -type f -exec rm -f {} +
+    @-rm -rf ../*~""")
     else:
         makefileHandle.write(
             """
-    clean:
-        @echo clean
-        find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
-        @-del -Force -Recurse ../*~""")
+clean:
+    @echo clean
+    find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
+    @-del -Force -Recurse ../*~""")
 
 
 def umakeClean(umakefileJson):
-    if "Linux" == platform.system():
-        os.system("make clean")
-        os.system("rm -rf ./"+WORKING_DIR())
-        os.system("rm -rf ./"+umakefileJson["buildDir"])
-        os.system("rm -rf ./Makefile")
-    else:
-        os.system("make clean")
-        os.system("del -Force -Recurse ./"+WORKING_DIR())
-        os.system("del -Force -Recurse ./"+umakefileJson["buildDir"])
-        os.system("del ./Makefile")
+    os.system("make clean")
+    shutil.rmtree(WORKING_DIR())
+    shutil.rmtree(umakefileJson["buildDir"])
+    shutil.rmtree("./Makefile")
+    # if "Linux" == platform.system():
+    #     os.system("make clean")
+    #     os.system("rm -rf ./"+WORKING_DIR())
+    #     os.system("rm -rf ./"+umakefileJson["buildDir"])
+    #     os.system("rm -rf ./Makefile")
+    # else:
+    #     os.system("make clean")
+    #     os.system("del -Force -Recurse ./"+WORKING_DIR())
+    #     os.system("del -Force -Recurse ./"+umakefileJson["buildDir"])
+    #     os.system("del ./Makefile")
 
 
 # MAIN
