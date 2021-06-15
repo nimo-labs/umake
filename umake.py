@@ -243,11 +243,17 @@ clean:
     @-del -Force -Recurse ../*~""")
 
 
+def remove_readonly(func, path, _):
+    "Clear the readonly bit and reattempt the removal"
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+
 def umakeClean(umakefileJson):
     os.system("make clean")
-    shutil.rmtree(WORKING_DIR())
-    shutil.rmtree(umakefileJson["buildDir"])
-    shutil.rmtree("./Makefile")
+    shutil.rmtree(WORKING_DIR(), onerror=remove_readonly)
+    shutil.rmtree(umakefileJson["buildDir"], onerror=remove_readonly)
+    shutil.rmtree("./Makefile", onerror=remove_readonly)
     # if "Linux" == platform.system():
     #     os.system("make clean")
     #     os.system("rm -rf ./"+WORKING_DIR())
