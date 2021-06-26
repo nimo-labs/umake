@@ -21,6 +21,8 @@ import json
 import os
 import sys
 from sys import exit
+import platform
+import shutil
 
 # setting these to True inhibits generation of the corrisponding default target
 inhibDefaultTgtMain = False
@@ -28,6 +30,7 @@ inhibDefaultTgtReset = False
 inhibDefaultTgtChipErase = False
 inhibDefaultTgtSize = False
 inhibDefaultTgtClean = False
+inhibDefaultTgtProgram = False
 projectLinkerFile = False
 
 
@@ -87,36 +90,37 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                 print("Book: %s doesn't match current book: %s" %
                       (bookJson['book'], currentBook))
                 exit()
-            for files in bookJson['files']:
-                makefileHandle.write("# %s include path\n" % currentBook)
-                makefileHandle.write(
-                    "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
-                makefileHandle.write("# %s source files\n" % currentBook)
-                if files["language"] == 'c':
+            if "files" in bookJson:
+                for files in bookJson['files']:
+                    makefileHandle.write("# %s include path\n" % currentBook)
                     makefileHandle.write(
-                        "SRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
-                    depfileHandle.write(
-                        "./build/%s.o: ./umake/nimolib/%s/%s\n" % (files["fileName"][:-2], currentBook, files["fileName"]))
-                    depfileHandle.write("\t$(UMAKE_MAKEC)\n")
-                elif files["language"] == 'cpp':
-                    makefileHandle.write(
-                        "CPPSRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
-                elif files["language"] == 'asm':
-                    makefileHandle.write(
-                        "ARCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
-                else:
-                    print("Unknown language for %s/%s/%s" %
-                          (currentLib, currentBook, files['fileName']))
-                if "cflags" in bookJson:
-                    makefileHandle.write("# Book CFLAGS\n")
-                    for cflags in bookJson["cflags"]:
-                        makefileHandle.write("CFLAGS += %s\n" % cflags)
-
-                if "ldflags" in bookJson:
-                    makefileHandle.write("# Book LDFLAGS\n")
-                    for ldflags in bookJson["ldflags"]:
+                        "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
+                    makefileHandle.write("# %s source files\n" % currentBook)
+                    if files["language"] == 'c':
                         makefileHandle.write(
-                            "LDFLAGS += %s\n" % ldflags)
+                            "SRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                        depfileHandle.write(
+                            "./build/%s.o: ./umake/nimolib/%s/%s\n" % (files["fileName"][:-2], currentBook, files["fileName"]))
+                        depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+                    elif files["language"] == 'cpp':
+                        makefileHandle.write(
+                            "CPPSRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                    elif files["language"] == 'asm':
+                        makefileHandle.write(
+                            "ARCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                    else:
+                        print("Unknown language for %s/%s/%s" %
+                              (currentLib, currentBook, files['fileName']))
+                    if "cflags" in bookJson:
+                        makefileHandle.write("# Book CFLAGS\n")
+                        for cflags in bookJson["cflags"]:
+                            makefileHandle.write("CFLAGS += %s\n" % cflags)
+
+                    if "ldflags" in bookJson:
+                        makefileHandle.write("# Book LDFLAGS\n")
+                        for ldflags in bookJson["ldflags"]:
+                            makefileHandle.write(
+                                "LDFLAGS += %s\n" % ldflags)
 
             makefileHandle.write("\n")
 
@@ -225,19 +229,50 @@ size: $(BUILD)/$(BIN).elf
 
 
 def defaultTgtClean():
+    if "Linux" == platform.system():
+        makefileHandle.write(
+            """
+clean:
+\t@echo clean
+\tfind ./build ! -name 'depfile' -type f -exec rm -f {} +
+\t@-rm -rf ../*~""")
+    else:
+        makefileHandle.write(
+            """
+clean:
+    @echo clean
+    find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
+    @-del -Force -Recurse ../*~""")
+
+
+def defaultTgtProgram():
     makefileHandle.write(
         """
-clean:
-	@echo clean
-	find ./build ! -name 'depfile' -type f -exec rm -f {} +
-	@-rm -rf ../*~""")
+program: all
+	hidBoot w m032lg6ae 0x3000 $(BUILD)/$(BIN)""")
+
+
+def remove_readonly(func, path, _):
+    "Clear the readonly bit and reattempt the removal"
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
 
 
 def umakeClean(umakefileJson):
     os.system("make clean")
-    os.system("rm -rf ./"+WORKING_DIR())
-    os.system("rm -rf ./"+umakefileJson["buildDir"])
-    os.system("rm -rf ./Makefile")
+    shutil.rmtree(WORKING_DIR(), onerror=remove_readonly)
+    shutil.rmtree(umakefileJson["buildDir"], onerror=remove_readonly)
+    shutil.rmtree("./Makefile", onerror=remove_readonly)
+    # if "Linux" == platform.system():
+    #     os.system("make clean")
+    #     os.system("rm -rf ./"+WORKING_DIR())
+    #     os.system("rm -rf ./"+umakefileJson["buildDir"])
+    #     os.system("rm -rf ./Makefile")
+    # else:
+    #     os.system("make clean")
+    #     os.system("del -Force -Recurse ./"+WORKING_DIR())
+    #     os.system("del -Force -Recurse ./"+umakefileJson["buildDir"])
+    #     os.system("del ./Makefile")
 
 
 # MAIN
@@ -349,6 +384,8 @@ if "targets" in umakefileJson:
             inhibDefaultTgtSize = True
         if(custTargs["targetName"].lower() == "clean"):
             inhibDefaultTgtClean = True
+        if(custTargs["targetName"].lower() == "program"):
+            inhibDefaultTgtProgram = True
 
         # Generate custom target
         makefileHandle.write("%s: %s\n" %
@@ -370,6 +407,8 @@ if False == inhibDefaultTgtSize:
     defaultTgtSize()
 if False == inhibDefaultTgtClean:
     defaultTgtClean()
+if False == inhibDefaultTgtProgram:
+    defaultTgtProgram()
 makefileHandle.write("\n\n")
 
 # Boiler plate
