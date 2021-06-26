@@ -1,3 +1,7 @@
+![Build status](https://github.com/nimo-labs/umake/actions/workflows/build_lin_stable.yml/badge.svg)
+![Build status](https://github.com/nimo-labs/umake/actions/workflows/build_win_stable.yml/badge.svg)
+![Build status](https://github.com/nimo-labs/umake/actions/workflows/build_lin.yml/badge.svg?branch=dev)
+![Build status](https://github.com/nimo-labs/umake/actions/workflows/build_win.yml/badge.svg?branch=dev)
 # umake
 **Micro-controller build manager**
 Released under GPL3, umake (pronounced micro make) is a utility to streamline the creation of micro-controller firmware projects and allow support for cross platform libraries.
