@@ -30,6 +30,7 @@ inhibDefaultTgtReset = False
 inhibDefaultTgtChipErase = False
 inhibDefaultTgtSize = False
 inhibDefaultTgtClean = False
+inhibDefaultTgtProgram = False
 projectLinkerFile = False
 
 
@@ -232,9 +233,9 @@ def defaultTgtClean():
         makefileHandle.write(
             """
 clean:
-    @echo clean
-    find ./build ! -name 'depfile' -type f -exec rm -f {} +
-    @-rm -rf ../*~""")
+\t@echo clean
+\tfind ./build ! -name 'depfile' -type f -exec rm -f {} +
+\t@-rm -rf ../*~""")
     else:
         makefileHandle.write(
             """
@@ -242,6 +243,13 @@ clean:
     @echo clean
     find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
     @-del -Force -Recurse ../*~""")
+
+
+def defaultTgtProgram():
+    makefileHandle.write(
+        """
+program: all
+	hidBoot w m032lg6ae 0x3000 $(BUILD)/$(BIN)""")
 
 
 def remove_readonly(func, path, _):
@@ -376,6 +384,8 @@ if "targets" in umakefileJson:
             inhibDefaultTgtSize = True
         if(custTargs["targetName"].lower() == "clean"):
             inhibDefaultTgtClean = True
+        if(custTargs["targetName"].lower() == "program"):
+            inhibDefaultTgtProgram = True
 
         # Generate custom target
         makefileHandle.write("%s: %s\n" %
@@ -397,6 +407,8 @@ if False == inhibDefaultTgtSize:
     defaultTgtSize()
 if False == inhibDefaultTgtClean:
     defaultTgtClean()
+if False == inhibDefaultTgtProgram:
+    defaultTgtProgram()
 makefileHandle.write("\n\n")
 
 # Boiler plate
