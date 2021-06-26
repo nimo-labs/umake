@@ -90,11 +90,11 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                 print("Book: %s doesn't match current book: %s" %
                       (bookJson['book'], currentBook))
                 exit()
+            makefileHandle.write("# %s include path\n" % currentBook)
+            makefileHandle.write(
+                "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
             if "files" in bookJson:
                 for files in bookJson['files']:
-                    makefileHandle.write("# %s include path\n" % currentBook)
-                    makefileHandle.write(
-                        "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
                     makefileHandle.write("# %s source files\n" % currentBook)
                     if files["language"] == 'c':
                         makefileHandle.write(
@@ -253,9 +253,10 @@ program: all
 
 
 def remove_readonly(func, path, _):
-    "Clear the readonly bit and reattempt the removal"
-    os.chmod(path, stat.S_IWRITE)
-    func(path)
+    if "Windows" == platform.system():
+        "Clear the readonly bit and reattempt the removal"
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
 
 
 def umakeClean(umakefileJson):
@@ -263,16 +264,6 @@ def umakeClean(umakefileJson):
     shutil.rmtree(WORKING_DIR(), onerror=remove_readonly)
     shutil.rmtree(umakefileJson["buildDir"], onerror=remove_readonly)
     shutil.rmtree("./Makefile", onerror=remove_readonly)
-    # if "Linux" == platform.system():
-    #     os.system("make clean")
-    #     os.system("rm -rf ./"+WORKING_DIR())
-    #     os.system("rm -rf ./"+umakefileJson["buildDir"])
-    #     os.system("rm -rf ./Makefile")
-    # else:
-    #     os.system("make clean")
-    #     os.system("del -Force -Recurse ./"+WORKING_DIR())
-    #     os.system("del -Force -Recurse ./"+umakefileJson["buildDir"])
-    #     os.system("del ./Makefile")
 
 
 # MAIN
