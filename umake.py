@@ -90,7 +90,7 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                 print("Book: %s doesn't match current book: %s" %
                       (bookJson['book'], currentBook))
                 exit()
-            if "files" in lib:
+            if "files" in bookJson:
                 for files in bookJson['files']:
                     makefileHandle.write("# %s include path\n" % currentBook)
                     makefileHandle.write(
