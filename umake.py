@@ -89,36 +89,37 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                 print("Book: %s doesn't match current book: %s" %
                       (bookJson['book'], currentBook))
                 exit()
-            for files in bookJson['files']:
-                makefileHandle.write("# %s include path\n" % currentBook)
-                makefileHandle.write(
-                    "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
-                makefileHandle.write("# %s source files\n" % currentBook)
-                if files["language"] == 'c':
+            if "files" in lib:
+                for files in bookJson['files']:
+                    makefileHandle.write("# %s include path\n" % currentBook)
                     makefileHandle.write(
-                        "SRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
-                    depfileHandle.write(
-                        "./build/%s.o: ./umake/nimolib/%s/%s\n" % (files["fileName"][:-2], currentBook, files["fileName"]))
-                    depfileHandle.write("\t$(UMAKE_MAKEC)\n")
-                elif files["language"] == 'cpp':
-                    makefileHandle.write(
-                        "CPPSRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
-                elif files["language"] == 'asm':
-                    makefileHandle.write(
-                        "ARCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
-                else:
-                    print("Unknown language for %s/%s/%s" %
-                          (currentLib, currentBook, files['fileName']))
-                if "cflags" in bookJson:
-                    makefileHandle.write("# Book CFLAGS\n")
-                    for cflags in bookJson["cflags"]:
-                        makefileHandle.write("CFLAGS += %s\n" % cflags)
-
-                if "ldflags" in bookJson:
-                    makefileHandle.write("# Book LDFLAGS\n")
-                    for ldflags in bookJson["ldflags"]:
+                        "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
+                    makefileHandle.write("# %s source files\n" % currentBook)
+                    if files["language"] == 'c':
                         makefileHandle.write(
-                            "LDFLAGS += %s\n" % ldflags)
+                            "SRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                        depfileHandle.write(
+                            "./build/%s.o: ./umake/nimolib/%s/%s\n" % (files["fileName"][:-2], currentBook, files["fileName"]))
+                        depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+                    elif files["language"] == 'cpp':
+                        makefileHandle.write(
+                            "CPPSRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                    elif files["language"] == 'asm':
+                        makefileHandle.write(
+                            "ARCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                    else:
+                        print("Unknown language for %s/%s/%s" %
+                              (currentLib, currentBook, files['fileName']))
+                    if "cflags" in bookJson:
+                        makefileHandle.write("# Book CFLAGS\n")
+                        for cflags in bookJson["cflags"]:
+                            makefileHandle.write("CFLAGS += %s\n" % cflags)
+
+                    if "ldflags" in bookJson:
+                        makefileHandle.write("# Book LDFLAGS\n")
+                        for ldflags in bookJson["ldflags"]:
+                            makefileHandle.write(
+                                "LDFLAGS += %s\n" % ldflags)
 
             makefileHandle.write("\n")
 
