@@ -249,7 +249,7 @@ def defaultTgtProgram():
     makefileHandle.write(
         """
 program: all
-	hidBoot w m032lg6ae 0x3000 $(BUILD)/$(BIN)""")
+	hidBoot w m032lg6ae 0x3000 $(BUILD)/$(BIN).bin""")
 
 
 def remove_readonly(func, path, _):
