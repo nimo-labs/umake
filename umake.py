@@ -90,11 +90,11 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                 print("Book: %s doesn't match current book: %s" %
                       (bookJson['book'], currentBook))
                 exit()
+            makefileHandle.write("# %s include path\n" % currentBook)
+            makefileHandle.write(
+                "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
             if "files" in bookJson:
                 for files in bookJson['files']:
-                    makefileHandle.write("# %s include path\n" % currentBook)
-                    makefileHandle.write(
-                        "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
                     makefileHandle.write("# %s source files\n" % currentBook)
                     if files["language"] == 'c':
                         makefileHandle.write(
