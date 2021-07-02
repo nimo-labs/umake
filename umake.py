@@ -126,12 +126,13 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
 
             bookHandle.close()
             os.chdir("..")
+        os.chdir("..")
 
 
 def processUc(umakefileJson, makefileHandle, depfileHandle):
     microcontroller = umakefileJson['microcontroller']
     restoreDir = os.getcwd()
-    os.chdir("uC")
+    os.chdir("nimolib/uC")
 
     uCHandle = open("uc_"+microcontroller+"-linux-gcc.json", 'r')
     uCJson = json.load(uCHandle)
