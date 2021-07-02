@@ -100,7 +100,7 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                         makefileHandle.write(
                             "SRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
                         depfileHandle.write(
-                            "./build/%s.o: ./umake/%s/%s/%s\n" % (currentLib, files["fileName"][:-2], currentBook, files["fileName"]))
+                            "./build/%s.o: ./umake/%s/%s/%s\n" % (files["fileName"][:-2], currentLib, currentBook, files["fileName"]))
                         depfileHandle.write("\t$(UMAKE_MAKEC)\n")
                     elif files["language"] == 'cpp':
                         makefileHandle.write(
@@ -241,9 +241,9 @@ clean:
         makefileHandle.write(
             """
 clean:
-    @echo clean
-    find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
-    @-del -Force -Recurse ../*~""")
+	@echo clean
+	find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
+	@-del -Force -Recurse ../*~""")
 
 
 def defaultTgtProgram():
@@ -254,17 +254,21 @@ program: all
 
 
 def remove_readonly(func, path, _):
-    if "Windows" == platform.system():
-        "Clear the readonly bit and reattempt the removal"
-        os.chmod(path, stat.S_IWRITE)
-        func(path)
+    "Clear the readonly bit and reattempt the removal"
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
 
 
 def umakeClean(umakefileJson):
     os.system("make clean")
-    shutil.rmtree(WORKING_DIR(), onerror=remove_readonly)
-    shutil.rmtree(umakefileJson["buildDir"], onerror=remove_readonly)
-    shutil.rmtree("./Makefile", onerror=remove_readonly)
+    if "Windows" == platform.system():
+        shutil.rmtree(WORKING_DIR(), onerror=remove_readonly)
+        shutil.rmtree(umakefileJson["buildDir"], onerror=remove_readonly)
+        shutil.rmtree("./Makefile", onerror=remove_readonly)
+    else:
+        shutil.rmtree(WORKING_DIR())
+        shutil.rmtree(umakefileJson["buildDir"])
+        os.remove("./Makefile")
 
 
 # MAIN
