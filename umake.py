@@ -92,22 +92,22 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                 exit()
             makefileHandle.write("# %s include path\n" % currentBook)
             makefileHandle.write(
-                "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
+                "INCLUDES += -I ./umake/%s/%s/\n" % (currentLib, currentBook))
             if "files" in bookJson:
                 for files in bookJson['files']:
                     makefileHandle.write("# %s source files\n" % currentBook)
                     if files["language"] == 'c':
                         makefileHandle.write(
-                            "SRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                            "SRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
                         depfileHandle.write(
-                            "./build/%s.o: ./umake/nimolib/%s/%s\n" % (files["fileName"][:-2], currentBook, files["fileName"]))
+                            "./build/%s.o: ./umake/%s/%s/%s\n" % (currentLib, files["fileName"][:-2], currentBook, files["fileName"]))
                         depfileHandle.write("\t$(UMAKE_MAKEC)\n")
                     elif files["language"] == 'cpp':
                         makefileHandle.write(
-                            "CPPSRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                            "CPPSRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
                     elif files["language"] == 'asm':
                         makefileHandle.write(
-                            "ARCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                            "ARCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
                     else:
                         print("Unknown language for %s/%s/%s" %
                               (currentLib, currentBook, files['fileName']))
