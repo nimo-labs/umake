@@ -273,10 +273,15 @@ def umakeClean(umakefileJson):
 
 # MAIN
 try:
-    with open('./umakefile', 'r') as handle:
-        umakefileJson = json.load(handle)
+    handle = open('./umakefile', 'r')
 except:
     print("./umakefile not found.")
+    exit(0)
+
+try:
+    umakefileJson = json.load(handle)
+except:
+    print("JSON load failed.")
     exit(0)
 
 try:
