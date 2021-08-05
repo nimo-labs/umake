@@ -389,8 +389,13 @@ if "targets" in umakefileJson:
             inhibDefaultTgtProgram = True
 
         # Generate custom target
-        makefileHandle.write("%s: %s\n" %
-                             (custTargs["targetName"], custTargs["depends"]))
+            try:
+                makefileHandle.write("%s: %s\n" %
+                                     (custTargs["targetName"], custTargs["depends"]))
+            except:
+                print("Error, Target: \"%s\" missing depends key." %
+                      custTargs["targetName"])
+                exit(0)
         for content in custTargs["content"]:
             makefileHandle.write("\t%s\n" % content)
         makefileHandle.write("\n")
