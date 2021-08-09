@@ -158,14 +158,27 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
         makefileHandle.write("LDFLAGS += -Wl,--script=%s\n" %
                              uCJson['linkerFile'])
 
-    makefileHandle.write("\n# Startup file\n")
-    makefileHandle.write("SRCS += %s\n" % uCJson['startupFile'])
 
-    startupFnLst = uCJson['startupFile'].split('/')
-    startupFn = startupFnLst[len(startupFnLst)-1]
-    depfileHandle.write(
-        "./build/%s.o: ./%s\n" % (startupFn[:-2], uCJson['startupFile']))
-    depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+# supportFiles superseeds startupFiles
+    if "supportFiles" in uCJson:
+        makefileHandle.write("\n# Support files\n")
+        for uCSupportFiles in uCJson["supportFiles"]:
+            makefileHandle.write("SRCS += %s\n" % uCSupportFiles)
+            startupFnLst = uCSupportFiles.split('/')
+            startupFn = startupFnLst[len(startupFnLst)-1]
+            depfileHandle.write(
+                "./build/%s.o: ./%s\n" % (startupFn[:-2], uCSupportFiles))
+            depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+    else:
+        # This can probably be removed once supportFiles is implemented
+        print("Warning: The startupFile entry in uC books has been deprecated, use supportFiles instead")
+        makefileHandle.write("\n# Startup file\n")
+        makefileHandle.write("SRCS += %s\n" % uCJson['startupFile'])
+        startupFnLst = uCJson['startupFile'].split('/')
+        startupFn = startupFnLst[len(startupFnLst)-1]
+        depfileHandle.write(
+            "./build/%s.o: ./%s\n" % (startupFn[:-2], uCJson['startupFile']))
+        depfileHandle.write("\t$(UMAKE_MAKEC)\n")
 
     os.chdir(restoreDir)
 
@@ -207,7 +220,7 @@ def defaultTgtMain():
 
 def defaultTgtReset():
     makefileHandle.write(
-            """
+        """
 reset: $(BUILD)/$(BIN).hex
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"reset\" -c \"exit\"""")
@@ -215,7 +228,7 @@ reset: $(BUILD)/$(BIN).hex
 
 def defaultTgtChipErase():
     makefileHandle.write(
-            """
+        """
 chip-erase:
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"at91samd chip-erase\" -c \"exit\"""")
@@ -223,7 +236,7 @@ chip-erase:
 
 def defaultTgtSize():
     makefileHandle.write(
-            """
+        """
 size: $(BUILD)/$(BIN).elf
 	@echo size:
 	@$(SIZE) -t $^""")
@@ -239,7 +252,7 @@ clean:
 \t@-rm -rf ../*~""")
     else:
         makefileHandle.write(
-                """
+            """
 clean:
 	@echo clean
 	find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
@@ -248,7 +261,7 @@ clean:
 
 def defaultTgtProgram():
     makefileHandle.write(
-            """
+        """
 program: all
 	hidBoot w m032lg6ae 0x3000 $(BUILD)/$(BIN).bin""")
 
