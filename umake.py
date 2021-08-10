@@ -92,22 +92,22 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                 exit()
             makefileHandle.write("# %s include path\n" % currentBook)
             makefileHandle.write(
-                "INCLUDES += -I ./umake/nimolib/%s/\n" % currentBook)
+                "INCLUDES += -I ./umake/%s/%s/\n" % (currentLib, currentBook))
             if "files" in bookJson:
                 for files in bookJson['files']:
                     makefileHandle.write("# %s source files\n" % currentBook)
                     if files["language"] == 'c':
                         makefileHandle.write(
-                            "SRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                            "SRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
                         depfileHandle.write(
-                            "./build/%s.o: ./umake/nimolib/%s/%s\n" % (files["fileName"][:-2], currentBook, files["fileName"]))
+                            "./build/%s.o: ./umake/%s/%s/%s\n" % (files["fileName"][:-2], currentLib, currentBook, files["fileName"]))
                         depfileHandle.write("\t$(UMAKE_MAKEC)\n")
                     elif files["language"] == 'cpp':
                         makefileHandle.write(
-                            "CPPSRCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                            "CPPSRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
                     elif files["language"] == 'asm':
                         makefileHandle.write(
-                            "ARCS += ./umake/nimolib/%s/%s\n" % (currentBook, files["fileName"]))
+                            "ARCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
                     else:
                         print("Unknown language for %s/%s/%s" %
                               (currentLib, currentBook, files['fileName']))
@@ -126,12 +126,13 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
 
             bookHandle.close()
             os.chdir("..")
+        os.chdir("..")
 
 
 def processUc(umakefileJson, makefileHandle, depfileHandle):
     microcontroller = umakefileJson['microcontroller']
     restoreDir = os.getcwd()
-    os.chdir("uC")
+    os.chdir("nimolib/uC")
 
     uCHandle = open("uc_"+microcontroller+"-linux-gcc.json", 'r')
     uCJson = json.load(uCHandle)
@@ -157,14 +158,27 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
         makefileHandle.write("LDFLAGS += -Wl,--script=%s\n" %
                              uCJson['linkerFile'])
 
-    makefileHandle.write("\n# Startup file\n")
-    makefileHandle.write("SRCS += %s\n" % uCJson['startupFile'])
 
-    startupFnLst = uCJson['startupFile'].split('/')
-    startupFn = startupFnLst[len(startupFnLst)-1]
-    depfileHandle.write(
-        "./build/%s.o: ./%s\n" % (startupFn[:-2], uCJson['startupFile']))
-    depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+# supportFiles superseeds startupFiles
+    if "supportFiles" in uCJson:
+        makefileHandle.write("\n# Support files\n")
+        for uCSupportFiles in uCJson["supportFiles"]:
+            makefileHandle.write("SRCS += %s\n" % uCSupportFiles)
+            startupFnLst = uCSupportFiles.split('/')
+            startupFn = startupFnLst[len(startupFnLst)-1]
+            depfileHandle.write(
+                "./build/%s.o: ./%s\n" % (startupFn[:-2], uCSupportFiles))
+            depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+    else:
+        # This can probably be removed once supportFiles is implemented
+        print("Warning: The startupFile entry in uC books has been deprecated, use supportFiles instead")
+        makefileHandle.write("\n# Startup file\n")
+        makefileHandle.write("SRCS += %s\n" % uCJson['startupFile'])
+        startupFnLst = uCJson['startupFile'].split('/')
+        startupFn = startupFnLst[len(startupFnLst)-1]
+        depfileHandle.write(
+            "./build/%s.o: ./%s\n" % (startupFn[:-2], uCJson['startupFile']))
+        depfileHandle.write("\t$(UMAKE_MAKEC)\n")
 
     os.chdir(restoreDir)
 
@@ -240,38 +254,47 @@ clean:
         makefileHandle.write(
             """
 clean:
-    @echo clean
-    find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
-    @-del -Force -Recurse ../*~""")
+	@echo clean
+	find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
+	@-del -Force -Recurse ../*~""")
 
 
 def defaultTgtProgram():
     makefileHandle.write(
         """
 program: all
-	hidBoot w m032lg6ae 0x3000 $(BUILD)/$(BIN)""")
+	hidBoot w m032lg6ae 0x3000 $(BUILD)/$(BIN).bin""")
 
 
 def remove_readonly(func, path, _):
-    if "Windows" == platform.system():
-        "Clear the readonly bit and reattempt the removal"
-        os.chmod(path, stat.S_IWRITE)
-        func(path)
+    "Clear the readonly bit and reattempt the removal"
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
 
 
 def umakeClean(umakefileJson):
     os.system("make clean")
-    shutil.rmtree(WORKING_DIR(), onerror=remove_readonly)
-    shutil.rmtree(umakefileJson["buildDir"], onerror=remove_readonly)
-    shutil.rmtree("./Makefile", onerror=remove_readonly)
+    if "Windows" == platform.system():
+        shutil.rmtree(WORKING_DIR(), onerror=remove_readonly)
+        shutil.rmtree(umakefileJson["buildDir"], onerror=remove_readonly)
+        shutil.rmtree("./Makefile", onerror=remove_readonly)
+    else:
+        shutil.rmtree(WORKING_DIR())
+        shutil.rmtree(umakefileJson["buildDir"])
+        os.remove("./Makefile")
 
 
 # MAIN
 try:
-    with open('./umakefile', 'r') as handle:
-        umakefileJson = json.load(handle)
+    handle = open('./umakefile', 'r')
 except:
     print("./umakefile not found.")
+    exit(0)
+
+try:
+    umakefileJson = json.load(handle)
+except:
+    print("JSON load failed.")
     exit(0)
 
 try:
@@ -316,7 +339,11 @@ makefileHandle.write("BIN = %s\n\n" % umakefileJson['target'])
 makefileHandle.write("# Project sources\n")
 makefileHandle.write("# C sources\n")
 for projSources in umakefileJson["c_sources"]:
-    makefileHandle.write("SRCS += %s\n" % projSources)
+    filename, fileExt = os.path.splitext(projSources)
+    if ".c" == fileExt:
+        makefileHandle.write("SRCS += %s\n" % projSources)
+    elif ".S" == fileExt:
+        makefileHandle.write("ASRCS += %s\n" % projSources)
     rawFileName = os.path.basename(projSources)
     rawFileName = rawFileName[:-2]
     depfileHandle.write(
@@ -379,8 +406,13 @@ if "targets" in umakefileJson:
             inhibDefaultTgtProgram = True
 
         # Generate custom target
-        makefileHandle.write("%s: %s\n" %
-                             (custTargs["targetName"], custTargs["depends"]))
+            try:
+                makefileHandle.write("%s: %s\n" %
+                                     (custTargs["targetName"], custTargs["depends"]))
+            except:
+                print("Error, Target: \"%s\" missing depends key." %
+                      custTargs["targetName"])
+                exit(0)
         for content in custTargs["content"]:
             makefileHandle.write("\t%s\n" % content)
         makefileHandle.write("\n")
