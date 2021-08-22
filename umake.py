@@ -46,7 +46,12 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
     for lib in umakefileJson["libraries"]:
         currentLib = lib["libName"]
         print("Processing library: %s" % currentLib)
-        cmd = "git clone --quiet --depth 1 %s" % lib["libPath"]
+
+        if "checkout" in lib:
+            cmd = "git clone --quiet  %s" % lib["libPath"]
+        else:
+            cmd = "git clone --quiet --depth 1 %s" % lib["libPath"]
+
         print(cmd)
         if 0 != os.system(cmd):
             # We've already cloned the repo, so check for updates
