@@ -362,6 +362,13 @@ for projIncludes in umakefileJson["includes"]:
     makefileHandle.write("INCLUDES += -I %s" % projIncludes)
 makefileHandle.write("\n\n")
 
+# Project level compiler defines
+if "defines" in umakefileJson:
+    makefileHandle.write("# Project level compiler defines\n")
+    for defines in umakefileJson["defines"]:
+        makefileHandle.write("DEFINES += %s\n" % defines)
+    makefileHandle.write("\n")
+
 # Project level LD FLAGS
 if "ldflags" in umakefileJson:
     makefileHandle.write("# Project level linker flags\n")
