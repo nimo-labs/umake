@@ -234,7 +234,7 @@ reset: $(BUILD)/$(BIN).hex
 def defaultTgtChipErase():
     makefileHandle.write(
         """
-chip-erase:
+chiperase:
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"at91samd chip-erase\" -c \"exit\"""")
 
@@ -268,7 +268,7 @@ def defaultTgtProgram():
     makefileHandle.write(
         """
 program: all
-	hidBoot w m032lg6ae 0x3000 $(BUILD)/$(BIN).bin""")
+	hidBoot w 0x3000 $(BUILD)/$(BIN).bin""")
 
 
 def remove_readonly(func, path, _):
@@ -418,13 +418,13 @@ if "targets" in umakefileJson:
             inhibDefaultTgtProgram = True
 
         # Generate custom target
-            try:
-                makefileHandle.write("%s: %s\n" %
-                                     (custTargs["targetName"], custTargs["depends"]))
-            except:
-                print("Error, Target: \"%s\" missing depends key." %
-                      custTargs["targetName"])
-                exit(0)
+        try:
+            makefileHandle.write("%s: %s\n" %
+                                 (custTargs["targetName"], custTargs["depends"]))
+        except:
+            print("Error, Target: \"%s\" missing depends key." %
+                  custTargs["targetName"])
+            exit(0)
         for content in custTargs["content"]:
             makefileHandle.write("\t%s\n" % content)
         makefileHandle.write("\n")
