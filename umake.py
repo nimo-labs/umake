@@ -355,6 +355,7 @@ makefileHandle.write("\n")
 makefileHandle.write("# Project include directories\n")
 for projIncludes in umakefileJson["includes"]:
     makefileHandle.write("INCLUDES += -I %s" % projIncludes)
+    makefileHandle.write("\n")
 makefileHandle.write("\n\n")
 
 # Project level LD FLAGS
