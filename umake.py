@@ -163,7 +163,16 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
     if "supportFiles" in uCJson:
         makefileHandle.write("\n# Support files\n")
         for uCSupportFiles in uCJson["supportFiles"]:
-            makefileHandle.write("SRCS += %s\n" % uCSupportFiles)
+            filename, fileExt = os.path.splitext(uCSupportFiles)
+            if ".c" == fileExt:
+                makefileHandle.write("SRCS += %s\n" % uCSupportFiles)
+            if ".cpp" == fileExt:
+                makefileHandle.write("CPPSRCS += %s\n" % uCSupportFiles)
+            elif ".S" == fileExt:
+                makefileHandle.write("ASRCS += %s\n" % uCSupportFiles)
+            elif ".s" == fileExt:
+                makefileHandle.write("ASRCS += %s\n" % uCSupportFiles)
+
             startupFnLst = uCSupportFiles.split('/')
             startupFn = startupFnLst[len(startupFnLst)-1]
             depfileHandle.write(
