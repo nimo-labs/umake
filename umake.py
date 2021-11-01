@@ -168,7 +168,18 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
     if "supportFiles" in uCJson:
         makefileHandle.write("\n# Support files\n")
         for uCSupportFiles in uCJson["supportFiles"]:
-            makefileHandle.write("SRCS += %s\n" % uCSupportFiles)
+            filename, fileExt = os.path.splitext(uCSupportFiles)
+            if ".c" == fileExt:
+                makefileHandle.write("SRCS += %s\n" % uCSupportFiles)
+            if ".cpp" == fileExt:
+                makefileHandle.write("CPPSRCS += %s\n" % uCSupportFiles)
+            elif ".S" == fileExt:
+                makefileHandle.write("ASRCS += %s\n" % uCSupportFiles)
+            elif ".s" == fileExt:
+                makefileHandle.write("ASRCS += %s\n" % uCSupportFiles)
+            elif ".asm" == fileExt:
+                makefileHandle.write("ASRCS += %s\n" % uCSupportFiles)
+
             startupFnLst = uCSupportFiles.split('/')
             startupFn = startupFnLst[len(startupFnLst)-1]
             depfileHandle.write(
@@ -190,8 +201,11 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
 
 def writeBoilerPlate(makefileHandle):
     makefileHandle.write("""CFLAGS += $(INCLUDES) $(DEFINES)
+AASRCS = $(subst .s,.S, $(notdir $(ASRCS)))
+ABSRCS = $(subst .asm,.S, $(notdir $(AASRCS)))
+
 OBJS = $(addprefix $(BUILD)/, $(subst .c,.o, $(notdir $(SRCS))))
-OBJS += $(addprefix $(BUILD)/, $(subst .S,.o, $(notdir $(ASRCS))))
+OBJS += $(addprefix $(BUILD)/, $(subst .S,.o, $(notdir $(ABSRCS))))
 OBJS += $(addprefix $(BUILD)/, $(subst .cpp,.o, $(CPPSRCS)))
 
 define UMAKE_MAKEC
@@ -225,7 +239,7 @@ def defaultTgtMain():
 
 def defaultTgtReset():
     makefileHandle.write(
-        """
+            """
 reset: $(BUILD)/$(BIN).hex
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"reset\" -c \"exit\"""")
@@ -241,7 +255,7 @@ chiperase:
 
 def defaultTgtSize():
     makefileHandle.write(
-        """
+            """
 size: $(BUILD)/$(BIN).elf
 	@echo size:
 	@$(SIZE) -t $^""")
@@ -257,7 +271,7 @@ clean:
 \t@-rm -rf ../*~""")
     else:
         makefileHandle.write(
-            """
+                """
 clean:
 	@echo clean
 	find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
@@ -266,7 +280,7 @@ clean:
 
 def defaultTgtProgram():
     makefileHandle.write(
-        """
+            """
 program: all
 	hidBoot w 0x3000 $(BUILD)/$(BIN).bin""")
 
@@ -344,13 +358,17 @@ makefileHandle.write("BIN = %s\n\n" % umakefileJson['target'])
 makefileHandle.write("# Project sources\n")
 makefileHandle.write("# C sources\n")
 for projSources in umakefileJson["c_sources"]:
+    rawFileName = os.path.basename(projSources)
     filename, fileExt = os.path.splitext(projSources)
     if ".c" == fileExt:
         makefileHandle.write("SRCS += %s\n" % projSources)
+        rawFileName = rawFileName[:-2]
     elif ".S" == fileExt:
         makefileHandle.write("ASRCS += %s\n" % projSources)
-    rawFileName = os.path.basename(projSources)
-    rawFileName = rawFileName[:-2]
+        rawFileName = rawFileName[:-2]
+    elif ".asm" == fileExt:
+        makefileHandle.write("ASRCS += %s\n" % projSources)
+        rawFileName = rawFileName[:-4]
     depfileHandle.write(
         "./build/"+rawFileName+".o: "+projSources+"\n")
     depfileHandle.write("\t$(UMAKE_MAKEC)\n")
