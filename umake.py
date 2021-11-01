@@ -46,7 +46,12 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
     for lib in umakefileJson["libraries"]:
         currentLib = lib["libName"]
         print("Processing library: %s" % currentLib)
-        cmd = "git clone --quiet --depth 1 %s" % lib["libPath"]
+
+        if "checkout" in lib:
+            cmd = "git clone --quiet  %s" % lib["libPath"]
+        else:
+            cmd = "git clone --quiet --depth 1 %s" % lib["libPath"]
+
         print(cmd)
         if 0 != os.system(cmd):
             # We've already cloned the repo, so check for updates
@@ -242,8 +247,8 @@ reset: $(BUILD)/$(BIN).hex
 
 def defaultTgtChipErase():
     makefileHandle.write(
-            """
-chip-erase:
+        """
+chiperase:
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"at91samd chip-erase\" -c \"exit\"""")
 
@@ -277,7 +282,7 @@ def defaultTgtProgram():
     makefileHandle.write(
             """
 program: all
-	hidBoot w m032lg6ae 0x3000 $(BUILD)/$(BIN).bin""")
+	hidBoot w 0x3000 $(BUILD)/$(BIN).bin""")
 
 
 def remove_readonly(func, path, _):
@@ -376,6 +381,13 @@ for projIncludes in umakefileJson["includes"]:
     makefileHandle.write("\n")
 makefileHandle.write("\n\n")
 
+# Project level compiler defines
+if "defines" in umakefileJson:
+    makefileHandle.write("# Project level compiler defines\n")
+    for defines in umakefileJson["defines"]:
+        makefileHandle.write("DEFINES += %s\n" % defines)
+    makefileHandle.write("\n")
+
 # Project level LD FLAGS
 if "ldflags" in umakefileJson:
     makefileHandle.write("# Project level linker flags\n")
@@ -425,13 +437,13 @@ if "targets" in umakefileJson:
             inhibDefaultTgtProgram = True
 
         # Generate custom target
-            try:
-                makefileHandle.write("%s: %s\n" %
-                                     (custTargs["targetName"], custTargs["depends"]))
-            except:
-                print("Error, Target: \"%s\" missing depends key." %
-                      custTargs["targetName"])
-                exit(0)
+        try:
+            makefileHandle.write("%s: %s\n" %
+                                 (custTargs["targetName"], custTargs["depends"]))
+        except:
+            print("Error, Target: \"%s\" missing depends key." %
+                  custTargs["targetName"])
+            exit(0)
         for content in custTargs["content"]:
             makefileHandle.write("\t%s\n" % content)
         makefileHandle.write("\n")
