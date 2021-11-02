@@ -168,7 +168,18 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
     if "supportFiles" in uCJson:
         makefileHandle.write("\n# Support files\n")
         for uCSupportFiles in uCJson["supportFiles"]:
-            makefileHandle.write("SRCS += %s\n" % uCSupportFiles)
+            filename, fileExt = os.path.splitext(uCSupportFiles)
+            if ".c" == fileExt:
+                makefileHandle.write("SRCS += %s\n" % uCSupportFiles)
+            if ".cpp" == fileExt:
+                makefileHandle.write("CPPSRCS += %s\n" % uCSupportFiles)
+            elif ".S" == fileExt:
+                makefileHandle.write("ASRCS += %s\n" % uCSupportFiles)
+            elif ".s" == fileExt:
+                makefileHandle.write("ASRCS += %s\n" % uCSupportFiles)
+            elif ".asm" == fileExt:
+                makefileHandle.write("ASRCS += %s\n" % uCSupportFiles)
+
             startupFnLst = uCSupportFiles.split('/')
             startupFn = startupFnLst[len(startupFnLst)-1]
             depfileHandle.write(
@@ -190,9 +201,12 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
 
 def writeBoilerPlate(makefileHandle):
     makefileHandle.write("""CFLAGS += $(INCLUDES) $(DEFINES)
+AASRCS = $(subst .s,.S, $(notdir $(ASRCS)))
+ABSRCS = $(subst .asm,.S, $(notdir $(AASRCS)))
+
 OBJS = $(addprefix $(BUILD)/, $(subst .c,.o, $(notdir $(SRCS))))
-OBJS += $(addprefix $(BUILD)/, $(subst .S,.o, $(notdir $(ASRCS))))
-OBJS += $(addprefix $(BUILD)/, $(subst .cpp,.o, $(CPPSRCS)))
+OBJS += $(addprefix $(BUILD)/, $(subst .S,.o, $(notdir $(ABSRCS))))
+OBJS += $(addprefix $(BUILD)/, $(subst .cpp,.o, $(notdir $(CPPSRCS))))
 
 define UMAKE_MAKEC
 @echo CC $@
@@ -207,7 +221,7 @@ endef
 
 $(BUILD)/$(BIN).elf: $(OBJS)
 	@echo LD $@
-	@$(CC) $(LDFLAGS) $(addprefix ${BUILD}/, $(notdir ${OBJS})) $(LIBS) -o $@
+	@$(CPP) $(LDFLAGS) $(addprefix ${BUILD}/, $(notdir ${OBJS})) $(LIBS) -o $@
 
 $(BUILD)/$(BIN).hex: $(BUILD)/$(BIN).elf
 	@echo OBJCOPY $@
@@ -233,7 +247,7 @@ reset: $(BUILD)/$(BIN).hex
 
 def defaultTgtChipErase():
     makefileHandle.write(
-        """
+            """
 chiperase:
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"at91samd chip-erase\" -c \"exit\"""")
@@ -344,22 +358,37 @@ makefileHandle.write("BIN = %s\n\n" % umakefileJson['target'])
 makefileHandle.write("# Project sources\n")
 makefileHandle.write("# C sources\n")
 for projSources in umakefileJson["c_sources"]:
+    rawFileName = os.path.basename(projSources)
     filename, fileExt = os.path.splitext(projSources)
+
     if ".c" == fileExt:
         makefileHandle.write("SRCS += %s\n" % projSources)
+        rawFileName = rawFileName[:-2]
+        depfileHandle.write("./build/"+rawFileName+".o: "+projSources+"\n")
+        depfileHandle.write("\t$(UMAKE_MAKEC)\n")
     elif ".S" == fileExt:
         makefileHandle.write("ASRCS += %s\n" % projSources)
-    rawFileName = os.path.basename(projSources)
-    rawFileName = rawFileName[:-2]
-    depfileHandle.write(
-        "./build/"+rawFileName+".o: "+projSources+"\n")
-    depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+        rawFileName = rawFileName[:-2]
+        depfileHandle.write("./build/"+rawFileName+".o: "+projSources+"\n")
+        depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+    elif ".asm" == fileExt:
+        makefileHandle.write("ASRCS += %s\n" % projSources)
+        rawFileName = rawFileName[:-4]
+        depfileHandle.write("./build/"+rawFileName+".o: "+projSources+"\n")
+        depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+    elif ".cpp" == fileExt:
+        makefileHandle.write("CPPSRCS += %s\n" % projSources)
+        rawFileName = rawFileName[:-4]
+        depfileHandle.write("./build/"+rawFileName+".o: "+projSources+"\n")
+        depfileHandle.write("\t$(UMAKE_MAKECPP)\n")
+
 makefileHandle.write("\n")
 
 
 makefileHandle.write("# Project include directories\n")
 for projIncludes in umakefileJson["includes"]:
     makefileHandle.write("INCLUDES += -I %s" % projIncludes)
+    makefileHandle.write("\n")
 makefileHandle.write("\n\n")
 
 # Project level compiler defines
