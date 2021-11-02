@@ -221,7 +221,7 @@ endef
 
 $(BUILD)/$(BIN).elf: $(OBJS)
 	@echo LD $@
-	@$(CC) $(LDFLAGS) $(addprefix ${BUILD}/, $(notdir ${OBJS})) $(LIBS) -o $@
+	@$(CPP) $(LDFLAGS) $(addprefix ${BUILD}/, $(notdir ${OBJS})) $(LIBS) -o $@
 
 $(BUILD)/$(BIN).hex: $(BUILD)/$(BIN).elf
 	@echo OBJCOPY $@
