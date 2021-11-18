@@ -95,17 +95,27 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                 print("Book: %s doesn't match current book: %s" %
                       (bookJson['book'], currentBook))
                 exit()
-            makefileHandle.write("# %s include path\n" % currentBook)
+            makefileHandle.write("# %s include paths\n" % currentBook)
             makefileHandle.write(
                 "INCLUDES += -I ./umake/%s/%s/\n" % (currentLib, currentBook))
+
+            if "includes" in bookJson:
+                for includes in bookJson['includes']:
+                    makefileHandle.write(
+                        "INCLUDES += -I ./umake/%s/%s/%s\n" % (currentLib, currentBook, includes))
+
             if "files" in bookJson:
                 for files in bookJson['files']:
+
+                    bookFnLst = files["fileName"].split('/')
+                    bookFn = bookFnLst[len(bookFnLst)-1]
+
                     makefileHandle.write("# %s source files\n" % currentBook)
                     if files["language"] == 'c':
                         makefileHandle.write(
                             "SRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
                         depfileHandle.write(
-                            "./build/%s.o: ./umake/%s/%s/%s\n" % (files["fileName"][:-2], currentLib, currentBook, files["fileName"]))
+                            "./build/%s.o: ./umake/%s/%s/%s\n" % (bookFn[:-2], currentLib, currentBook, files["fileName"]))
                         depfileHandle.write("\t$(UMAKE_MAKEC)\n")
                     elif files["language"] == 'cpp':
                         makefileHandle.write(
@@ -116,16 +126,16 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
                     else:
                         print("Unknown language for %s/%s/%s" %
                               (currentLib, currentBook, files['fileName']))
-                    if "cflags" in bookJson:
-                        makefileHandle.write("# Book CFLAGS\n")
-                        for cflags in bookJson["cflags"]:
-                            makefileHandle.write("CFLAGS += %s\n" % cflags)
+            if "cflags" in bookJson:
+                makefileHandle.write("# Book CFLAGS\n")
+                for cflags in bookJson["cflags"]:
+                    makefileHandle.write("CFLAGS += %s\n" % cflags)
 
-                    if "ldflags" in bookJson:
-                        makefileHandle.write("# Book LDFLAGS\n")
-                        for ldflags in bookJson["ldflags"]:
-                            makefileHandle.write(
-                                "LDFLAGS += %s\n" % ldflags)
+            if "ldflags" in bookJson:
+                makefileHandle.write("# Book LDFLAGS\n")
+                for ldflags in bookJson["ldflags"]:
+                    makefileHandle.write(
+                        "LDFLAGS += %s\n" % ldflags)
 
             makefileHandle.write("\n")
 
@@ -146,15 +156,20 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
         print("Microcontroller: %s doesn't match requested: %s" %
               (uCJson['microcontroller'], microcontroller))
         exit()
-    makefileHandle.write("# Microcontroller defines\n")
+
+    makefileHandle.write("\n# Microcontroller includes\n")
+    for uCIncludes in uCJson["includes"]:
+        makefileHandle.write("INCLUDES += -I %s\n" % uCIncludes)
+
+    makefileHandle.write("\n# Microcontroller defines\n")
     for uCDefines in uCJson["defines"]:
         makefileHandle.write("DEFINES += -D %s\n" % uCDefines)
 
     makefileHandle.write("\n# Microcontroller CFLAGS\n")
     for uCCflags in uCJson["cflags"]:
         makefileHandle.write("CFLAGS += %s\n" % uCCflags)
-    makefileHandle.write("\n# Microcontroller LDFLAGS\n")
 
+        makefileHandle.write("\n# Microcontroller LDFLAGS\n")
     for uCLdflags in uCJson["ldflags"]:
         makefileHandle.write("LDFLAGS += %s\n" % uCLdflags)
 
@@ -239,7 +254,7 @@ def defaultTgtMain():
 
 def defaultTgtReset():
     makefileHandle.write(
-        """
+            """
 reset: $(BUILD)/$(BIN).hex
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"reset\" -c \"exit\"""")
@@ -247,7 +262,7 @@ reset: $(BUILD)/$(BIN).hex
 
 def defaultTgtChipErase():
     makefileHandle.write(
-            """
+        """
 chiperase:
 	killall -s 9 openocd || true
 	openocd -d1 -f ./openocd.cfg -c init -c \"at91samd chip-erase\" -c \"exit\"""")
@@ -255,7 +270,7 @@ chiperase:
 
 def defaultTgtSize():
     makefileHandle.write(
-        """
+            """
 size: $(BUILD)/$(BIN).elf
 	@echo size:
 	@$(SIZE) -t $^""")
@@ -271,7 +286,7 @@ clean:
 \t@-rm -rf ../*~""")
     else:
         makefileHandle.write(
-            """
+                """
 clean:
 	@echo clean
 	find ./build ! -name 'depfile' -type f -exec del -Force -Recurse {} +
@@ -280,7 +295,7 @@ clean:
 
 def defaultTgtProgram():
     makefileHandle.write(
-        """
+            """
 program: all
 	hidBoot w 0x3000 $(BUILD)/$(BIN).bin""")
 
