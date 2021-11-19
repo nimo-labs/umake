@@ -156,7 +156,6 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
 
     try:
         os.chdir("nimolib/uC")
-
         uCHandle = open("uc_"+microcontroller+"-linux-gcc.json", 'r')
         uCJson = json.load(uCHandle)
 
@@ -165,21 +164,25 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
                   (uCJson['microcontroller'], microcontroller))
             exit()
 
-        makefileHandle.write("\n# Microcontroller includes\n")
-        for uCIncludes in uCJson["includes"]:
-            makefileHandle.write("INCLUDES += -I %s\n" % uCIncludes)
+        if "includes" in uCJson:
+            makefileHandle.write("\n# Microcontroller includes\n")
+            for uCIncludes in uCJson["includes"]:
+                makefileHandle.write("INCLUDES += -I %s\n" % uCIncludes)
 
-        makefileHandle.write("\n# Microcontroller defines\n")
-        for uCDefines in uCJson["defines"]:
-            makefileHandle.write("DEFINES += -D %s\n" % uCDefines)
+        if "defines" in uCJson:
+            makefileHandle.write("\n# Microcontroller defines\n")
+            for uCDefines in uCJson["defines"]:
+                makefileHandle.write("DEFINES += -D %s\n" % uCDefines)
 
-        makefileHandle.write("\n# Microcontroller CFLAGS\n")
-        for uCCflags in uCJson["cflags"]:
-            makefileHandle.write("CFLAGS += %s\n" % uCCflags)
+        if "cflags" in uCJson:
+            makefileHandle.write("\n# Microcontroller CFLAGS\n")
+            for uCCflags in uCJson["cflags"]:
+                makefileHandle.write("CFLAGS += %s\n" % uCCflags)
 
+        if "ldflags" in uCJson:
             makefileHandle.write("\n# Microcontroller LDFLAGS\n")
-        for uCLdflags in uCJson["ldflags"]:
-            makefileHandle.write("LDFLAGS += %s\n" % uCLdflags)
+            for uCLdflags in uCJson["ldflags"]:
+                makefileHandle.write("LDFLAGS += %s\n" % uCLdflags)
 
         if False == projectLinkerFile:
             makefileHandle.write("\n# Linker file\n")
