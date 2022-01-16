@@ -1,0 +1,14 @@
+name: Linux dev build
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
+          docker build -t ghcr.io/nimo-labs/nimobuild:latest -f ./build_copntainer/Dockerfile .
+          docker push ghcr.io/nimo-labs/nimobuild:latest 
+        name: Run in container
