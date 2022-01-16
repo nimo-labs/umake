@@ -1,4 +1,4 @@
-name: Linux dev build
+name: Build container
 
 on: workflow_dispatch
 
