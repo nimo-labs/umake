@@ -84,78 +84,79 @@ def processLibs(umakefileJson, makefileHandle, depfileHandle):
         os.chdir(currentLib)
         makefileHandle.write("# %s: books\n" % currentLib)
 
-        for book in lib["books"]:
-            currentBook = book
-            try:
-                os.chdir(currentBook)
-                print("Processing book: %s/%s" % (currentLib, currentBook))
-                bookHandle = open(currentBook+".json", 'r')
-                bookJson = json.load(bookHandle)
+        if "books" in lib:
+            for book in lib["books"]:
+                currentBook = book
+                try:
+                    os.chdir(currentBook)
+                    print("Processing book: %s/%s" % (currentLib, currentBook))
+                    bookHandle = open(currentBook+".json", 'r')
+                    bookJson = json.load(bookHandle)
 
-                if bookJson['book'] != currentBook:
-                    print("Book: %s doesn't match current book: %s" %
-                          (bookJson['book'], currentBook))
-                    exit()
-                makefileHandle.write("# %s include paths\n" % currentBook)
-                makefileHandle.write(
-                    "INCLUDES += -I ./umake/%s/%s/\n" % (currentLib, currentBook))
-
-                if "includes" in bookJson:
-                    for includes in bookJson['includes']:
-                        makefileHandle.write(
-                            "INCLUDES += -I ./umake/%s/%s/%s\n" % (currentLib, currentBook, includes))
-
-                if "files" in bookJson:
+                    if bookJson['book'] != currentBook:
+                        print("Book: %s doesn't match current book: %s" %
+                              (bookJson['book'], currentBook))
+                        exit()
+                    makefileHandle.write("# %s include paths\n" % currentBook)
                     makefileHandle.write(
-                        "# %s source files\n" % currentBook)
-                    for files in bookJson['files']:
+                        "INCLUDES += -I ./umake/%s/%s/\n" % (currentLib, currentBook))
 
-                        bookFnLst = files["fileName"].split('/')
-                        bookFn = bookFnLst[len(bookFnLst)-1]
+                    if "includes" in bookJson:
+                        for includes in bookJson['includes']:
+                            makefileHandle.write(
+                                "INCLUDES += -I ./umake/%s/%s/%s\n" % (currentLib, currentBook, includes))
 
-                        if files["language"] == 'c':
-                            makefileHandle.write(
-                                "SRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
-                            depfileHandle.write(
-                                "./build/%s.o: ./umake/%s/%s/%s\n" % (bookFn[:-2], currentLib, currentBook, files["fileName"]))
-                            depfileHandle.write("\t$(UMAKE_MAKEC)\n")
-                        elif files["language"] == 'cpp':
-                            makefileHandle.write(
-                                "CPPSRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
-                        elif files["language"] == 'asm':
-                            makefileHandle.write(
-                                "ARCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
-                        else:
-                            print("Unknown language for %s/%s/%s" %
-                                  (currentLib, currentBook, files['fileName']))
-                if "cflags" in bookJson:
-                    makefileHandle.write("# Book CFLAGS\n")
-                    for cflags in bookJson["cflags"]:
-                        makefileHandle.write("CFLAGS += %s\n" % cflags)
-
-                if "ldflags" in bookJson:
-                    makefileHandle.write("# Book LDFLAGS\n")
-                    for ldflags in bookJson["ldflags"]:
+                    if "files" in bookJson:
                         makefileHandle.write(
-                            "LDFLAGS += %s\n" % ldflags)
+                            "# %s source files\n" % currentBook)
+                        for files in bookJson['files']:
 
-                makefileHandle.write("\n")
+                            bookFnLst = files["fileName"].split('/')
+                            bookFn = bookFnLst[len(bookFnLst)-1]
 
-                bookHandle.close()
-            except:
-                print("Unknown book %s in %s" %
-                      (currentBook, currentLib))
-                exit(1)
-            os.chdir("..")
+                            if files["language"] == 'c':
+                                makefileHandle.write(
+                                    "SRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
+                                depfileHandle.write(
+                                    "./build/%s.o: ./umake/%s/%s/%s\n" % (bookFn[:-2], currentLib, currentBook, files["fileName"]))
+                                depfileHandle.write("\t$(UMAKE_MAKEC)\n")
+                            elif files["language"] == 'cpp':
+                                makefileHandle.write(
+                                    "CPPSRCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
+                            elif files["language"] == 'asm':
+                                makefileHandle.write(
+                                    "ARCS += ./umake/%s/%s/%s\n" % (currentLib, currentBook, files["fileName"]))
+                            else:
+                                print("Unknown language for %s/%s/%s" %
+                                      (currentLib, currentBook, files['fileName']))
+                    if "cflags" in bookJson:
+                        makefileHandle.write("# Book CFLAGS\n")
+                        for cflags in bookJson["cflags"]:
+                            makefileHandle.write("CFLAGS += %s\n" % cflags)
+
+                    if "ldflags" in bookJson:
+                        makefileHandle.write("# Book LDFLAGS\n")
+                        for ldflags in bookJson["ldflags"]:
+                            makefileHandle.write(
+                                "LDFLAGS += %s\n" % ldflags)
+
+                    makefileHandle.write("\n")
+
+                    bookHandle.close()
+                except:
+                    print("Unknown book %s in %s" %
+                          (currentBook, currentLib))
+                    exit(1)
+                os.chdir("..")
         os.chdir("..")
 
 
-def processUc(umakefileJson, makefileHandle, depfileHandle):
+def processUc(umakefileJson, makefileHandle, depfileHandle, ucLib):
     microcontroller = umakefileJson['microcontroller']
     restoreDir = os.getcwd()
 
     try:
-        os.chdir("nimolib/uC")
+        os.chdir(ucLib)
         uCHandle = open("uc_"+microcontroller+"-linux-gcc.json", 'r')
         uCJson = json.load(uCHandle)
 
@@ -183,7 +184,6 @@ def processUc(umakefileJson, makefileHandle, depfileHandle):
             makefileHandle.write("\n# Microcontroller LDFLAGS\n")
             for uCLdflags in uCJson["ldflags"]:
                 makefileHandle.write("LDFLAGS += %s\n" % uCLdflags)
-
         if False == projectLinkerFile:
             makefileHandle.write("\n# Linker file\n")
             makefileHandle.write("LDFLAGS += -Wl,--script=%s\n" %
@@ -414,7 +414,6 @@ for projSources in umakefileJson["c_sources"]:
 
 makefileHandle.write("\n")
 
-
 makefileHandle.write("# Project include directories\n")
 for projIncludes in umakefileJson["includes"]:
     makefileHandle.write("INCLUDES += -I %s" % projIncludes)
@@ -443,8 +442,15 @@ if "linkerFile" in umakefileJson:
                          umakefileJson["linkerFile"])
     makefileHandle.write("\n")
 
+# Setup micro-controller library
+if "ucLib" in umakefileJson:
+    ucLib = umakefileJson["ucLib"]
+else:
+    print("Error, ucLib not defined")
+    exit(1)
+
 # Process microcontroller
-processUc(umakefileJson, makefileHandle, depfileHandle)
+processUc(umakefileJson, makefileHandle, depfileHandle, ucLib)
 
 # Define toolchain
 makefileHandle.write("# Define toolchain\n")
