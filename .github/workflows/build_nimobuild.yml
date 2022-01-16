@@ -1,6 +1,11 @@
 name: Build container
 
-on: workflow_dispatch
+on: 
+  workflow_run:
+    workflows: ["Linux build"]
+    types:
+      - completed
+  workflow_dispatch:
 
 jobs:
   build:
@@ -11,4 +16,4 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u USERNAME --password-stdin
           docker build -t ghcr.io/nimo-labs/nimobuild:latest -f ./build_container/Dockerfile .
           docker push ghcr.io/nimo-labs/nimobuild:latest 
-        name: Run in container
+        name: Build container
