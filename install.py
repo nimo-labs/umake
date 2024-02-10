@@ -27,7 +27,7 @@ if 'Linux' == osType:
         exit(1)
     os.system('cp -f ./umake.py /usr/local/bin/umake')
     os.system(
-        'wget https://github.com/nimo-labs/hid_bootloader_console_client/releases/download/latest/hidBoot')
+        'wget https://github.com/nimo-labs/hid_bootloader_console_client/releases/download/stable-lin/hidBoot')
     os.system('chmod +x ./hidBoot')
     os.system('cp -f ./hidBoot /usr/local/bin')
 
